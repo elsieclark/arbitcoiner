@@ -1,0 +1,23 @@
+{
+  "name": "arbitcoiner",
+  "version": "0.0.1",
+  "description": "Arbitrage bot for cryptocurrencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/willdavidc/arbitcoiner.git"
+  },
+  "author": "Will Clark",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/willdavidc/arbitcoiner/issues"
+  },
+  "homepage": "https://github.com/willdavidc/arbitcoiner#readme",
+  "dependencies": {
+    "poloniex-api-node": "^1.6.5",
+    "superqueue": "0.0.6"
+  }
+}
