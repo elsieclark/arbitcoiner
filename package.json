@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/willdavidc/arbitcoiner#readme",
   "dependencies": {
+    "app-root-path": "^2.0.1",
     "poloniex-api-node": "^1.6.5",
     "superqueue": "0.0.6"
   }
