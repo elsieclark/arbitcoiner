@@ -37,7 +37,7 @@ queue.addFlag('ticker', { concurrency: 100000, interval: 300 });
             }
             if (changed) {
                 console.log(Date.now(), 'Prices updated');
-                fs.appendFileSync(`${process.cwd()}/data.txt`, Date.now() + ' ' + JSON.stringify(prices) + '\n');
+                fs.appendFileSync(`${process.cwd()}/data/recon/data.txt`, Date.now() + ' ' + JSON.stringify(prices) + '\n');
             }
         })
         .catch((err) => {
