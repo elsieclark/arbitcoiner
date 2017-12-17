@@ -38,7 +38,7 @@ queue.addFlag('ticker', { concurrency: 100000, interval: 350 });
 const prices = { BTC_ETH: {}, BTC_BCH: {}, ETH_BCH: {} };
 const balances = { BTC: 0, ETH: 0, BCH: 0 };
 
-let tradeInProgress = false;
+let tradeInProgress = true;
 
 
 // Permanent rolling ticker
@@ -91,7 +91,9 @@ const addTicker = (priority, once) => {
 };
 
 const profitableCW = () => {
-    Log.info('\nCW:', ((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid);
+    const time = new Date();
+    Log.info('\n', time.toString());
+    Log.info('CW:', ((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid);
     return (((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid) > 1.008;
 };
 
@@ -239,31 +241,12 @@ async function initialize() {
     await updateBalances();
     await addTicker(10, true);
     const time = new Date();
-    Log.info(`Initializing trader`,
+    await Log.info(`Initializing trader`,
         `\n    Time:     ${time.toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances, '\n');
+    tradeInProgress = false;
     addTicker();
 }
 
 initialize();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
