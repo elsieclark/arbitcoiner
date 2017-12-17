@@ -4,6 +4,9 @@ const path = require('path');
 
 const format = (args) => {
     return args.map((arg) => {
+        if (typeof arg === 'string' || arg instanceof String) {
+            return arg;
+        }
         try {
             return JSON.stringify(arg);
         } catch (e) {
