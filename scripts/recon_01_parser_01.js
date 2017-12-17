@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const file = fs.readFileSync('/Users/willclark/Documents/repos/arbitcoiner/data/recon/data_02.txt').toString();
+const file = fs.readFileSync('/Users/willclark/Documents/repos/arbitcoiner/data/recon/data_03.txt').toString();
 
 const output = file
     .split('\n').slice(1)
@@ -33,4 +33,4 @@ const output = file
     .map((row) => row.join(', '))
     .join('\n');
 
-fs.writeFileSync('/Users/willclark/Documents/repos/arbitcoiner/data/recon/filter-17-12-16_01.txt', output);
+fs.writeFileSync('/Users/willclark/Documents/repos/arbitcoiner/data/recon/filter-17-12-17_01.txt', output);

@@ -118,7 +118,7 @@ async function finishTriangle() {
 }
 
 async function updateBalances() {
-    const newBal = await queue.push({ flags: ['private_util'] }, () => poloniex.returnBalances());
+    const newBal = await queue.push({ flags: ['private_util'] }, () => privatePolo.private_util.returnBalances());
     balances.BTC = newBal.BTC;
     balances.BCH = newBal.BCH;
     balances.ETH = newBal.ETH;
@@ -176,7 +176,7 @@ async function executeTriangle(isCW) {
 
     let failureCount = 1;
     while (!await tradesCompleted(orderNumbers)) {
-        Log.info(`Trade failed. Count: ${failureCount++}. Time: ${Date.now().toString()}`)
+        Log.info(`Trade failed. Count: ${failureCount++}. Time: ${Date.now().toString()}`);
         // Cancel outstanding trades
         const cancelled = await Promise.all(orderNumbers.map((orderNumber) => cancelTrade(orderNumber)));
         if (cancelled.every((order) => !order)) {
