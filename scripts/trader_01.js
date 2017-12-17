@@ -47,34 +47,34 @@ const addTicker = (priority, once) => {
     }
     return queue.push({ flags: ['ticker'], priority: priority || 5 }, () => { return poloniex.returnTicker(); })
         .then((result) => {
-            console.log('Started')
             let changed = false;
-            if (JSON.stringify(prices.BTC_ETH) !== JSON.stringify(result.BTC_ETH)) {
-                prices.BTC_ETH = {
-                    highestBid: result.BTC_ETH.highestBid,
-                    lowestAsk: result.BTC_ETH.lowestAsk,
-                };
-                console.log('Alpha', prices.BTC_ETH)
+            const newBTC_ETH = {
+                highestBid: result.BTC_ETH.highestBid,
+                lowestAsk: result.BTC_ETH.lowestAsk,
+            };
+            if (JSON.stringify(prices.BTC_ETH) !== JSON.stringify(newBTC_ETH)) {
+                prices.BTC_ETH = newBTC_ETH
                 changed = true;
             }
-            if (JSON.stringify(prices.BTC_BCH) !== JSON.stringify(result.BTC_BCH)) {
-                prices.BTC_BCH = {
-                    highestBid: result.BTC_BCH.highestBid,
-                    lowestAsk: result.BTC_BCH.lowestAsk,
-                };
-                console.log('Beta', prices.BTC_BCH)
+
+            const newBTC_BCH = {
+                highestBid: result.BTC_BCH.highestBid,
+                lowestAsk: result.BTC_BCH.lowestAsk,
+            };
+            if (JSON.stringify(prices.BTC_BCH) !== JSON.stringify(newBTC_BCH)) {
+                prices.BTC_BCH = newBTC_BCH;
                 changed = true;
             }
-            if (JSON.stringify(prices.ETH_BCH) !== JSON.stringify(result.ETH_BCH)) {
-                prices.ETH_BCH = {
-                    highestBid: result.ETH_BCH.highestBid,
-                    lowestAsk: result.ETH_BCH.lowestAsk,
-                };
-                console.log('Gamma', prices.ETH_BCH)
+
+            const newETH_BCH = {
+                highestBid: result.ETH_BCH.highestBid,
+                lowestAsk: result.ETH_BCH.lowestAsk,
+            };
+            if (JSON.stringify(prices.ETH_BCH) !== JSON.stringify(newETH_BCH)) {
+                prices.ETH_BCH = newETH_BCH;
                 changed = true;
             }
             if (changed) {
-                console.log('Delta')
                 //Log.info(Date.now() + ' ' + JSON.stringify(prices));
                 emitter.emit('tryTrade');
             }
