@@ -37,7 +37,7 @@ queue.addFlag('ticker', { concurrency: 100000, interval: 350 });
 const prices = { BTC_ETH: {}, BTC_BCH: {}, ETH_BCH: {} };
 const balances = { BTC: 0, ETH: 0, BCH: 0 };
 
-let tradeInProgress = false;
+let tradeInProgress = true;
 
 
 // Permanent rolling ticker
@@ -47,25 +47,29 @@ const addTicker = (priority, once) => {
     }
     return queue.push({ flags: ['ticker'], priority: priority || 5 }, () => { return poloniex.returnTicker(); })
         .then((result) => {
-            console.log('Started')
             let changed = false;
             if (JSON.stringify(prices.BTC_ETH) !== JSON.stringify(result.BTC_ETH)) {
-                prices.BTC_ETH = result.BTC_ETH;
-                console.log('Alpha', result.BTC_ETH)
+                prices.BTC_ETH = {
+                    highestBid: result.BTC_ETH.highestBid,
+                    lowestAsk: result.BTC_ETH.lowestAsk,
+                };
                 changed = true;
             }
             if (JSON.stringify(prices.BTC_BCH) !== JSON.stringify(result.BTC_BCH)) {
-                prices.BTC_BCH = result.BTC_BCH;
-                console.log('Beta', result.BTC_BCH)
+                prices.BTC_BCH = {
+                    highestBid: result.BTC_BCH.highestBid,
+                    lowestAsk: result.BTC_BCH.lowestAsk,
+                };
                 changed = true;
             }
             if (JSON.stringify(prices.ETH_BCH) !== JSON.stringify(result.ETH_BCH)) {
-                prices.ETH_BCH = result.ETH_BCH;
-                console.log('Gamma', result.ETH_BCH)
+                prices.ETH_BCH = {
+                    highestBid: result.ETH_BCH.highestBid,
+                    lowestAsk: result.ETH_BCH.lowestAsk,
+                };
                 changed = true;
             }
             if (changed) {
-                console.log('Delta')
                 //Log.info(Date.now() + ' ' + JSON.stringify(prices));
                 emitter.emit('tryTrade');
             }
@@ -221,32 +225,13 @@ emitter.on('tryTrade', () => {
 
 async function initialize() {
     await updateBalances();
-    addTicker(10, true);
+    await addTicker(10, true);
     Log.info(`Initializing trader`,
         `\n    Time:     ${Date.now().toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances, '\n');
+    tradeInProgress = false;
     addTicker();
 }
 
 initialize();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
