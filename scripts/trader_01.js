@@ -221,9 +221,13 @@ emitter.on('tryTrade', () => {
     if (tradeInProgress) {
         return;
     }
+    const time = new Date();
+    Log.info(time.toString(), 'Checking for triangular trade');
     if (profitableCW()) {
+        Log.info('Detected clockwise trade');
         return executeTriangle(true);
     } else if (profitableCCW()) {
+        Log.info('Detected counter-clockwise trade');
         return executeTriangle(false);
     }
 });
@@ -231,8 +235,9 @@ emitter.on('tryTrade', () => {
 async function initialize() {
     await updateBalances();
     await addTicker(10, true);
+    const time = new Date();
     Log.info(`Initializing trader`,
-        `\n    Time:     ${Date.now().toString()}`,
+        `\n    Time:     ${time.toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances, '\n');
     addTicker();
