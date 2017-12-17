@@ -92,7 +92,7 @@ const addTicker = (priority, once) => {
 
 const profitableCW = () => {
     const time = new Date();
-    Log.info('\n', time.toString());
+    Log.info(`\n${time.toString()}`);
     Log.info('CW:', ((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid);
     return (((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid) > 1.008;
 };
