@@ -104,12 +104,15 @@ const profitableCCW = () => {
 
 async function executeTrade({ pair, isForwards, poloName, price, amount }) {
     const polo = privatePolo[poloName];
+    Log.info(`Pushing trade: ${isForwards ? 'buy' : 'sell'} ${pair}. Price: ${price}, Amount: ${amount}`);
     if (isForwards) {
         return await queue.push({ flags: [poloName], priority: 11 }, () => {
+            Log.info(`Actually executing ${pair} buy`);
             return polo.buy(pair, price, amount, false, false, false);
         });
     } else {
         return await queue.push({ flags: [poloName], priority: 11 }, () => {
+            Log.info(`Actually executing ${pair} sell`);
             return polo.sell(pair, price, amount, false, false, false);
         });
     }
@@ -176,6 +179,7 @@ async function executeTriangle(isCW) {
         { pair: 'ETH_BCH', isForwards: isCW, poloName: 'private_2' },
     ];
     calculateTrade(triDetails);
+    Log.info('Calculating triangle details', triDetails);
 
     let orderNumbers = await Promise.all([
         executeTrade(triDetails[0]),
@@ -228,12 +232,16 @@ emitter.on('tryTrade', () => {
     }
     const time = new Date();
     //Log.info(time.toString(), 'Checking for triangular trade');
-    if (profitableCW()) {
-        Log.info('Detected clockwise trade');
-        return executeTriangle(true);
-    } else if (profitableCCW()) {
-        Log.info('Detected counter-clockwise trade');
-        return executeTriangle(false);
+    try {
+        if (profitableCW()) {
+            Log.info('Detected clockwise trade');
+            return executeTriangle(true);
+        } else if (profitableCCW()) {
+            Log.info('Detected counter-clockwise trade');
+            return executeTriangle(false);
+        }
+    } catch (err) {
+        Log.info('Attempting trade error', err);
     }
 });
 
