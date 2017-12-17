@@ -22,7 +22,8 @@ const resolveFilePath = (dir, name) => {
 
 const fileExists = (fileName) => {
     return new Promise((resolve, reject) => {
-        fs.stat(fileName, (err) => {
+        fs.stat(fileName, (err, data) => {
+            console.log('File check', err, data);
             resolve(!!err);
         });
     });
