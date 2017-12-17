@@ -1,4 +1,5 @@
 "use strict";
+process.env.UV_THREADPOOL_SIZE = 128;
 const appRoot  = require('app-root-path');
 const events   = require('events');
 const Logger   = require(appRoot + '/utils/logger.js');
@@ -53,7 +54,7 @@ const addTicker = (priority, once) => {
                 lowestAsk: result.BTC_ETH.lowestAsk,
             };
             if (JSON.stringify(prices.BTC_ETH) !== JSON.stringify(newBTC_ETH)) {
-                prices.BTC_ETH = newBTC_ETH
+                prices.BTC_ETH = newBTC_ETH;
                 changed = true;
             }
 
@@ -90,10 +91,12 @@ const addTicker = (priority, once) => {
 };
 
 const profitableCW = () => {
+    Log.info('\nCW:', ((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid);
     return (((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid) > 1.008;
 };
 
 const profitableCCW = () => {
+    Log.info('CCW:', (1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid);
     return ((1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid) > 1.008;
 };
 
@@ -222,7 +225,7 @@ emitter.on('tryTrade', () => {
         return;
     }
     const time = new Date();
-    Log.info(time.toString(), 'Checking for triangular trade');
+    //Log.info(time.toString(), 'Checking for triangular trade');
     if (profitableCW()) {
         Log.info('Detected clockwise trade');
         return executeTriangle(true);
