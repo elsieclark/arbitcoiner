@@ -47,20 +47,25 @@ const addTicker = (priority, once) => {
     }
     return queue.push({ flags: ['ticker'], priority: priority || 5 }, () => { return poloniex.returnTicker(); })
         .then((result) => {
+            console.log('Started')
             let changed = false;
             if (JSON.stringify(prices.BTC_ETH) !== JSON.stringify(result.BTC_ETH)) {
                 prices.BTC_ETH = result.BTC_ETH;
+                console.log('Alpha', result.BTC_ETH)
                 changed = true;
             }
             if (JSON.stringify(prices.BTC_BCH) !== JSON.stringify(result.BTC_BCH)) {
                 prices.BTC_BCH = result.BTC_BCH;
+                console.log('Beta', result.BTC_BCH)
                 changed = true;
             }
             if (JSON.stringify(prices.ETH_BCH) !== JSON.stringify(result.ETH_BCH)) {
                 prices.ETH_BCH = result.ETH_BCH;
+                console.log('Gamma', result.ETH_BCH)
                 changed = true;
             }
             if (changed) {
+                console.log('Delta')
                 //Log.info(Date.now() + ' ' + JSON.stringify(prices));
                 emitter.emit('tryTrade');
             }
