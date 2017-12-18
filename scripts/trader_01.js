@@ -133,13 +133,14 @@ async function tradesCompleted(orderIds) {
 
 let i = 0;
 async function finishTriangle() {
-    tradeCount.total++;
+    const tradeNumber = ++tradeCount.total;
     await updateBalances();
     await addTicker(10);
     tradeInProgress = false;
     emitter.emit('tryTrade');
-    await Log.ledger(`After trade:`,
-        `\n    Time:     ${Date.now().toString()}`,
+    const d = Date.now();
+    await Log.ledger(`After trade #${tradeNumber}:`,
+        `\n    Time:     ${d.toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances,
         '\n    Record:   ', tradeCount);
