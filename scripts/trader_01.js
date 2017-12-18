@@ -188,12 +188,15 @@ async function executeTriangle(isCW) {
     calculateTrade(triDetails);
     Log.info('Calculating triangle details', triDetails);
 
-    let orderNumbers = await Promise.all([
+    const orders = await Promise.all([
         executeTrade(triDetails[0]),
         executeTrade(triDetails[1]),
         executeTrade(triDetails[2]),
     ]);
+    let orderNumbers = orders.map((order) => order.orderNumber);
     const startTime = Date.now();
+
+    Log.info('\nTrades made with IDs:', orders, orderNumbers);
 
     while (Date.now() - startTime < 10000) {
         if (await tradesCompleted(orderNumbers)) {
@@ -221,7 +224,8 @@ async function executeTriangle(isCW) {
             }
             calculateTrade([triDetails[i]]);
             Log.ledger(`Trying new makeup trade: `, triDetails[i]);
-            return await executeTrade(triDetails[i]);
+            orders[i] = await executeTrade(triDetails[i]);
+            return orders[i].orderNumber;
         });
 
         await wait(10000);
