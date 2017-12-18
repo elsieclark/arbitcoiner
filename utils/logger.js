@@ -65,9 +65,10 @@ module.exports = (name, ledgerDir, infoDir) => {
     const Logger = {
 
         // Write only to the official record
-        ledger: (...args) => {
+        ledger: async(...args) => {
             const output = format(...args);
-            writeToFile(infoDir, name, output);
+            console.log(output);
+            await writeToFile(infoDir, name, output);
             return writeToFile(ledgerDir, name, output);
         },
 
