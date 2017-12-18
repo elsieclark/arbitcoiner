@@ -15,9 +15,21 @@ const format = (...args) => {
     }).join(' ');
 };
 
-const resolveFilePath = (dir, name) => {
+const mkdir = (path) => {
+    return new Promise((resolve, reject) => {
+        fs.mkdir(path, () => {
+            resolve();
+        });
+    });
+};
+
+const resolveFilePath = async(dir, name) => {
     const d = new Date();
-    return `${dir}/${d.getFullYear()}-${`0${d.getMonth()+1}`.slice(-2)}-${`0${d.getDate()}`.slice(-2)}/${name}.txt`;
+    const folder = `${dir}/${d.getFullYear()}-${`0${d.getMonth()+1}`.slice(-2)}-${`0${d.getDate()}`.slice(-2)}/`;
+    if (!await fileExists(folder)) {
+        await mkdir(folder);
+    }
+    return `${folder}${name}.txt`;
 };
 
 const fileExists = (fileName) => {
@@ -45,7 +57,7 @@ async function writeToFile(dir, name, data) {
         const d = new Date();
         await appendFile(path, `${name} file created: ${d.toString()}\n`)
     }
-    await appendFile(path, `${data}\n`);
+    return appendFile(path, `${data}\n`);
 }
 
 module.exports = (name, ledgerDir, infoDir) => {
@@ -54,6 +66,7 @@ module.exports = (name, ledgerDir, infoDir) => {
         // Write only to the official record
         ledger: (...args) => {
             const output = format(...args);
+            writeToFile(infoDir, name, output);
             return writeToFile(ledgerDir, name, output);
         },
 

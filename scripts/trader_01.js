@@ -104,7 +104,7 @@ const profitableCCW = () => {
 
 async function executeTrade({ pair, isForwards, poloName, price, amount }) {
     const polo = privatePolo[poloName];
-    Log.info(`Pushing trade: ${isForwards ? 'buy' : 'sell'} ${pair}. Price: ${price}, Amount: ${amount}`);
+    Log.ledger(`Pushing trade: ${isForwards ? 'buy' : 'sell'} ${pair}. Price: ${price}, Amount: ${amount}`);
     if (isForwards) {
         return await queue.push({ flags: [poloName], priority: 11 }, () => {
             Log.info(`Actually executing ${pair} buy`);
@@ -124,19 +124,22 @@ async function tradesCompleted(orderIds) {
     return currentOrders.every((trade) => !orderIds.includes(trade.orderNumber));
 }
 
+let i = 0;
 async function finishTriangle() {
     tradeCount.total++;
     await updateBalances();
     await addTicker(10);
     tradeInProgress = false;
     emitter.emit('tryTrade');
-    await Log.info(`After trade:`,
+    await Log.ledger(`After trade:`,
         `\n    Time:     ${Date.now().toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances,
         '\n    Record:   ', tradeCount);
-    await Log.info('Shutting down');
-    process.exit(1);
+    if (i++ === 4) {
+        await Log.info('Shutting down');
+        process.exit(1);
+    }
 }
 
 async function updateBalances() {
@@ -155,7 +158,7 @@ function wait(delay) {
 function calculateTrade(triDetails) {
     triDetails.forEach((trade) => {
         trade.price = trade.isForwards ? prices[trade.pair].lowestAsk : prices[trade.pair].highestBid;
-        trade.amount = 0.99 * (trade.isForwards ? balances[trade.pair.split('_')[0]] * prices[trade.pair].lowestAsk :
+        trade.amount = 0.999 * (trade.isForwards ? balances[trade.pair.split('_')[0]] / prices[trade.pair].lowestAsk :
             balances[trade.pair.split('_')[1]]);
     });
 }
@@ -168,7 +171,7 @@ async function cancelTrade(orderNumber) {
 
 async function executeTriangle(isCW) {
     tradeInProgress = true;
-    Log.info(`\nMaking ${isCW ? 'clockwise' : 'counter-clockwise'} trade (trade #${tradeCount.total + 1})`,
+    Log.ledger(`\nMaking ${isCW ? 'clockwise' : 'counter-clockwise'} trade (trade #${tradeCount.total + 1})`,
         `\n    Time:     ${Date.now().toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances);
@@ -190,7 +193,7 @@ async function executeTriangle(isCW) {
 
     while (Date.now() - startTime < 10000) {
         if (await tradesCompleted(orderNumbers)) {
-            Log.info(`Trade successful after ${(Date.now() - startTime)/1000}s`);
+            Log.ledger(`Trade successful after ${(Date.now() - startTime)/1000}s`);
             tradeCount.successful++;
             await finishTriangle();
             return;
@@ -199,7 +202,7 @@ async function executeTriangle(isCW) {
 
     let failureCount = 1;
     while (!await tradesCompleted(orderNumbers)) {
-        Log.info(`Trade failed. Count: ${failureCount++}. Time: ${Date.now().toString()}`);
+        Log.ledger(`Trade failed. Count: ${failureCount++}. Time: ${Date.now().toString()}`);
         // Cancel outstanding trades
         const cancelled = await Promise.all(orderNumbers.map((orderNumber) => cancelTrade(orderNumber)));
         if (cancelled.every((order) => !order)) {
@@ -213,7 +216,7 @@ async function executeTriangle(isCW) {
                 return orderNumber;
             }
             calculateTrade([triDetails[i]]);
-            Log.info(`Trying new makeup trade: `, triDetails[i]);
+            Log.ledger(`Trying new makeup trade: `, triDetails[i]);
             return await executeTrade(triDetails[i]);
         });
 
@@ -221,7 +224,7 @@ async function executeTriangle(isCW) {
     }
     // Uh-oh. Everything's gone wrong. Fix it here.
 
-    Log.info(`Trade failed after ${(Date.now() - startTime)/1000}s`);
+    Log.ledger(`Trade failed after ${(Date.now() - startTime)/1000}s`);
     tradeCount.unsuccessful++;
     await finishTriangle();
 }
@@ -234,10 +237,10 @@ emitter.on('tryTrade', () => {
     //Log.info(time.toString(), 'Checking for triangular trade');
     try {
         if (profitableCW()) {
-            Log.info('Detected clockwise trade');
+            Log.ledger('Detected clockwise trade');
             return executeTriangle(true);
         } else if (profitableCCW()) {
-            Log.info('Detected counter-clockwise trade');
+            Log.ledger('Detected counter-clockwise trade');
             return executeTriangle(false);
         }
     } catch (err) {
@@ -249,7 +252,7 @@ async function initialize() {
     await updateBalances();
     await addTicker(10, true);
     const time = new Date();
-    await Log.info(`Initializing trader`,
+    await Log.ledger(`Initializing trader`,
         `\n    Time:     ${time.toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances, '\n');
