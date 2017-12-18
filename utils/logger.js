@@ -35,6 +35,7 @@ const resolveFilePath = async(dir, name) => {
 const fileExists = (fileName) => {
     return new Promise((resolve, reject) => {
         fs.stat(fileName, (err, data) => {
+            console.log(err, data);
             resolve(!err);
         });
     });
