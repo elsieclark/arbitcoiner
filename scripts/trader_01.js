@@ -32,7 +32,7 @@ queue.addFlag('private_0', { concurrency: 1 });
 queue.addFlag('private_1', { concurrency: 1 });
 queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
-queue.addFlag('ticker', { concurrency: 1, interval: 400 });
+queue.addFlag('ticker', { concurrency: 3, interval: 400 });
 
 const prices = { BTC_ETH: {}, BTC_BCH: {}, ETH_BCH: {} };
 const balances = { BTC: 0, ETH: 0, BCH: 0 };
@@ -105,9 +105,9 @@ const profitableCCW = () => {
     return ((1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid) > 1.008;
 };
 
-async function executeTrade({ pair, isForwards, poloName, price, amount }) {
+async function executeTrade({ pair, isForwards, poloName, price, amount}) {
     const polo = privatePolo[poloName];
-    Log.ledger(`Pushing trade: ${isForwards ? 'buy' : 'sell'} ${pair}. Price: ${price}, Amount: ${amount}`);
+    Log.ledger(`Pushing trade #${tradeCount.total + 1}: ${isForwards ? 'buy' : 'sell'} ${pair}. Price: ${price}, Amount: ${amount}`);
     if (isForwards) {
         return await queue.push({ flags: [poloName], priority: 11 }, () => {
             Log.info(`Actually executing ${pair} buy`);
@@ -121,11 +121,25 @@ async function executeTrade({ pair, isForwards, poloName, price, amount }) {
     }
 }
 
+function getOpenOrders() {
+    return queue.push({ flags: ['private_util'] }, () => {
+        Log.info('Execute getting of open orders');
+        return privatePolo.private_util.returnOpenOrders()
+            .catch((err) => {
+                Log.info('Return open orders err:', err);
+                throw err;
+            })
+            .then((res) => {
+                Log.info('Got open orders', res);
+                return res;
+            });
+    });
+}
+
 async function tradesCompleted(orderIds) {
     await Log.info('\nAbout to check if trades are completed');
     // Get all outstanding orders, and flatten the array
-    const ordersByCurrency = await queue.push({ flags: ['private_util'] }, () =>
-        privatePolo.private_util.returnOpenOrders('all'));
+    const ordersByCurrency = await getOpenOrders();
     await Log.info('Got orders by currency', ordersByCurrency);
     const currentOrders = ordersByCurrency.values().reduce((acc, val) => acc.concat(val), []);
 
@@ -144,11 +158,11 @@ async function finishTriangle() {
     tradeInProgress = false;
     emitter.emit('tryTrade');
     const d = Date.now();
-    await Log.ledger(`After trade #${tradeNumber}:`,
+    await Log.ledger(`\nAfter trade #${tradeNumber}:`,
         `\n    Time:     ${d.toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances,
-        '\n    Record:   ', tradeCount);
+        '\n    Record:   ', tradeCount, '\n');
     if (i++ === 4) {
         await Log.info('Shutting down');
         process.exit(1);
@@ -188,7 +202,7 @@ async function executeTriangle(isCW) {
     Log.ledger(`\nMaking ${isCW ? 'clockwise' : 'counter-clockwise'} trade (trade #${tradeCount.total + 1})`,
         `\n    Time:     ${d.toString()}`,
         '\n    Prices:   ', prices,
-        '\n    Balances: ', balances);
+        '\n    Balances: ', balances, '\n');
 
     const triDetails = [
         { pair: 'BTC_ETH', isForwards: isCW, poloName: 'private_0' },
