@@ -40,6 +40,9 @@ const balances = { BTC: 0, ETH: 0, BCH: 0 };
 
 let tradeInProgress = true;
 
+process.on('unhandledRejection', (reason, p) => {
+    Log.info('Unhandled Rejection at: Promise', p, 'reason:', reason);
+});
 
 // Permanent rolling ticker
 const addTicker = (priority, once) => {
