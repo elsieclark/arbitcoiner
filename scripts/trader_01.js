@@ -94,12 +94,12 @@ const profitableCW = () => {
     const time = new Date();
     Log.info(`\n${time.toString()}`);
     Log.info('CW:', ((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid);
-    return (((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid) > 1.008;
+    return (((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid) > 0.008;
 };
 
 const profitableCCW = () => {
     Log.info('CCW:', (1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid);
-    return ((1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid) > 1.008;
+    return ((1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid) > 0.008;
 };
 
 async function executeTrade({ pair, isForwards, poloName, price, amount }) {
@@ -157,6 +157,7 @@ function calculateTrade(triDetails) {
         trade.price = trade.isForwards ? prices[trade.pair].lowestAsk : prices[trade.pair].highestBid;
         trade.amount = 0.99 * (trade.isForwards ? balances[trade.pair.split('-')[0]] * prices[trade.pair].lowestAsk :
             balances[trade.pair.split('-')[1]]);
+        Log.info('Components:', trade.isForwards, trade.pair.split('-')[0], balances[trade.pair.split('-')[0]], prices[trade.pair].lowestAsk, balances[trade.pair.split('-')[1]], trade.amount)
     });
 }
 
@@ -180,6 +181,8 @@ async function executeTriangle(isCW) {
     ];
     calculateTrade(triDetails);
     Log.info('Calculating triangle details', triDetails);
+
+    process.exit(1);
 
     let orderNumbers = await Promise.all([
         executeTrade(triDetails[0]),
