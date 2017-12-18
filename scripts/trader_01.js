@@ -121,27 +121,15 @@ async function executeTrade({ pair, isForwards, poloName, price, amount}) {
     }
 }
 
-function getOpenOrders() {
-    return queue.push({ flags: ['private_util'] }, () => {
-        Log.info('Execute getting of open orders');
-        return privatePolo.private_util.returnOpenOrders()
-            .catch((err) => {
-                Log.info('Return open orders err:', err);
-                throw err;
-            })
-            .then((res) => {
-                Log.info('Got open orders', res);
-                return res;
-            });
-    });
-}
-
 async function tradesCompleted(orderIds) {
     await Log.info('\nAbout to check if trades are completed');
     // Get all outstanding orders, and flatten the array
-    const ordersByCurrency = await getOpenOrders();
-    await Log.info('Got orders by currency', ordersByCurrency);
-    const currentOrders = ordersByCurrency.values().reduce((acc, val) => acc.concat(val), []);
+    const ordersByCurrency = await queue.push({ flags: ['private_util'] }, () =>
+        privatePolo.private_util.returnOpenOrders('all'));
+    await Log.info('Got orders by currency', typeof ordersByCurrency, ordersByCurrency);
+    const currentOrdersArrays = ordersByCurrency.values();
+    await Log.info('Got orders in one array', ordersByCurrency);
+    const currentOrders = currentOrdersArrays.reduce((acc, val) => acc.concat(val), []);
 
     await Log.info('Received current orders:', orderIds, currentOrders);
     // Compare the two arrays, check for overlaps
