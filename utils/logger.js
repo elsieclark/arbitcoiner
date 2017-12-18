@@ -37,7 +37,7 @@ const fileExists = (fileName) => {
         fs.stat(fileName, (err, data) => {
             resolve(!err);
         });
-    }); 
+    });
 };
 
 const appendFile = (path, data) => {
