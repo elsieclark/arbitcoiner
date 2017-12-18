@@ -122,8 +122,10 @@ async function executeTrade({ pair, isForwards, poloName, price, amount }) {
 }
 
 async function tradesCompleted(orderIds) {
+    await Log.info('\nAbout to check if trades are completed');
     const currentOrders = await queue.push({ flags: ['private_util'] }, () =>
         privatePolo.private_util.returnOpenOrders('all'));
+    await Log.info('Received current orders:', currentOrders);
     const areCompleted = currentOrders.every((trade) => !orderIds.includes(trade.orderNumber));
     await Log.info('Checking if trades are completed: ', areCompleted, orderIds, currentOrders);
     return areCompleted;
@@ -224,7 +226,13 @@ async function executeTriangle(isCW) {
     }
 
     while (Date.now() - startTime < 10000) {
-        if (await tradesCompleted(orderNumbers)) {
+        let tradesComplete = false;
+        try {
+            tradesComplete = await tradesCompleted(orderNumbers);
+        } catch (e) {
+            await Log.info('Error checking if trades completed');
+        }
+        if (tradesComplete) {
             Log.ledger(`Trade successful after ${(Date.now() - startTime)/1000}s`);
             tradeCount.successful++;
             await finishTriangle();
