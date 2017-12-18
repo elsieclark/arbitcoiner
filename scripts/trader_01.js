@@ -84,7 +84,7 @@ const addTicker = (priority, once) => {
             }
         })
         .catch((err) => {
-            console.error('Error:', err);
+            Log.info('Error:', err);
         })
         .then(() => {
             if (!once) {
@@ -128,10 +128,8 @@ async function tradesCompleted(orderIds) {
         privatePolo.private_util.returnOpenOrders('all'));
     const currentOrders = Object.values(ordersByCurrency).reduce((acc, val) => acc.concat(val), []);
 
-    await Log.info('Received current orders:', orderIds, currentOrders);
     // Compare the two arrays, check for overlaps
     const areCompleted = currentOrders.every((trade) => !orderIds.includes(trade.orderNumber));
-    await Log.info('Checking if trades are completed: ', areCompleted);
     return areCompleted;
 }
 
@@ -176,7 +174,12 @@ function calculateTrade(triDetails) {
 }
 
 async function cancelTrade(orderNumber) {
-    const cancelSuccessful = await privatePolo.private_util.cancelOrder(orderNumber);
+    let cancelSuccessful;
+    try {
+        cancelSuccessful = await privatePolo.private_util.cancelOrder(orderNumber);
+    } catch (e) {
+        return false;
+    }
     Log.info(`Cancelled order ${orderNumber}. Details:`, cancelSuccessful);
     return cancelSuccessful.success === 1;
 }
@@ -246,30 +249,43 @@ async function executeTriangle(isCW) {
         }
     }
 
+    let d = Date.now();
+    Log.info('Trade did not pass after 10s. Attempting auxiliary trades.', d.toString());
+
     let failureCount = 1;
     while (!await tradesCompleted(orderNumbers)) {
-        Log.ledger(`Trade failed. Count: ${failureCount++}. Time: ${Date.now().toString()}`);
+        d = Date.now();
+        Log.ledger(`Trade failed. Count: ${failureCount++}. Time: ${d.toString()}`);
         // Cancel outstanding trades
-        const cancelled = await Promise.all(orderNumbers.map((orderNumber) => cancelTrade(orderNumber)));
-        if (cancelled.every((order) => !order)) {
+        const cancelled = [];
+        cancelled[0] = await cancelTrade(orderNumbers[0]);
+        cancelled[1] = await cancelTrade(orderNumbers[1]);
+        cancelled[2] = await cancelTrade(orderNumbers[2]);
+
+        if (!cancelled[0] && !cancelled[1] && !cancelled[2]) {
             break;
         }
 
+        Log.info('Trade has not completed, but trades have been cancelled');
+
         // Try again at the new price
         await addTicker(10, true);
-        orderNumbers = orderNumbers.map(async(orderNumber, i) => {
+
+
+        for (let j = 0; j < orderNumbers.length; j++) {
             if (!cancelled[i]) {
-                return orderNumber;
+                continue;
             }
-            calculateTrade([triDetails[i]]);
-            Log.ledger(`Trying new makeup trade: `, triDetails[i]);
-            orders[i] = await executeTrade(triDetails[i]);
-            return orders[i].orderNumber;
-        });
+            calculateTrade([triDetails[j]]);
+            await Log.ledger(`Trying new makeup trade: `, triDetails[j]);
+            orders[j] = await executeTrade(triDetails[j]);
+            orderNumbers[j] = orders[j].orderNumber;
+        }
 
         await wait(10000);
+        d = Date.now();
+        Log.info('Waited 10s', d.toString());
     }
-    // Uh-oh. Everything's gone wrong. Fix it here.
 
     Log.ledger(`Trade failed after ${(Date.now() - startTime)/1000}s`);
     tradeCount.unsuccessful++;
