@@ -32,7 +32,7 @@ queue.addFlag('private_0', { concurrency: 1 });
 queue.addFlag('private_1', { concurrency: 1 });
 queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
-queue.addFlag('ticker', { concurrency: 100000, interval: 400 });
+queue.addFlag('ticker', { concurrency: 1, interval: 400 });
 
 const prices = { BTC_ETH: {}, BTC_BCH: {}, ETH_BCH: {} };
 const balances = { BTC: 0, ETH: 0, BCH: 0 };
