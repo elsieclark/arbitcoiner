@@ -157,7 +157,7 @@ function calculateTrade(triDetails) {
         trade.price = trade.isForwards ? prices[trade.pair].lowestAsk : prices[trade.pair].highestBid;
         trade.amount = 0.99 * (trade.isForwards ? balances[trade.pair.split('-')[0]] * prices[trade.pair].lowestAsk :
             balances[trade.pair.split('-')[1]]);
-        Log.info('Components:', trade.isForwards, trade.pair.split('-')[0], balances[trade.pair.split('-')[0]], prices[trade.pair].lowestAsk, balances[trade.pair.split('-')[1]], trade.amount)
+        Log.info('Components:', prices, prices[trade.pair].lowestAsk, balances[trade.pair.split('-')[1]], trade.amount)
     });
 }
 
