@@ -47,7 +47,7 @@ process.on('unhandledRejection', (reason, p) => {
 // Permanent rolling ticker
 const addTicker = (priority, once) => {
     if (tradeInProgress && !once) {
-        return;
+        return Promise.resolve();
     }
     return queue.push({ flags: ['ticker'], priority: priority || 5 }, () => { return poloniex.returnTicker(); })
         .then((result) => {
@@ -271,6 +271,7 @@ async function executeTriangle(isCW) {
         // Try again at the new price
         await addTicker(10, true);
 
+        Log.info('Ticker has been updated once');
 
         for (let j = 0; j < orderNumbers.length; j++) {
             if (!cancelled[i]) {
@@ -282,7 +283,7 @@ async function executeTriangle(isCW) {
             orderNumbers[j] = orders[j].orderNumber;
         }
 
-        await wait(10000);
+        await wait(5000);
         d = Date.now();
         Log.info('Waited 10s', d.toString());
     }
