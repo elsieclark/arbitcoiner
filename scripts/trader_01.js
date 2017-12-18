@@ -186,7 +186,7 @@ async function cancelTrade(orderNumber) {
 
 async function executeTriangle(isCW) {
     tradeInProgress = true;
-    const d = Date.now();
+    let d = Date.now();
     Log.ledger(`\nMaking ${isCW ? 'clockwise' : 'counter-clockwise'} trade (trade #${tradeCount.total + 1})`,
         `\n    Time:     ${d.toString()}`,
         '\n    Prices:   ', prices,
@@ -249,7 +249,7 @@ async function executeTriangle(isCW) {
         }
     }
 
-    let d = Date.now();
+    d = Date.now();
     Log.info('Trade did not pass after 10s. Attempting auxiliary trades.', d.toString());
 
     let failureCount = 1;
