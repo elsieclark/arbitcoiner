@@ -35,10 +35,9 @@ const resolveFilePath = async(dir, name) => {
 const fileExists = (fileName) => {
     return new Promise((resolve, reject) => {
         fs.stat(fileName, (err, data) => {
-            console.log(err, data);
             resolve(!err);
         });
-    });
+    }); 
 };
 
 const appendFile = (path, data) => {
@@ -53,7 +52,7 @@ const appendFile = (path, data) => {
 };
 
 async function writeToFile(dir, name, data) {
-    const path = resolveFilePath(dir, name);
+    const path = await resolveFilePath(dir, name);
     if (!await fileExists(path)) {
         const d = new Date();
         await appendFile(path, `${name} file created: ${d.toString()}\n`)
@@ -68,8 +67,10 @@ module.exports = (name, ledgerDir, infoDir) => {
         ledger: async(...args) => {
             const output = format(...args);
             console.log(output);
-            await writeToFile(infoDir, name, output);
-            return writeToFile(ledgerDir, name, output);
+            return writeToFile(infoDir, name, output)
+                .then(() => {
+                    writeToFile(ledgerDir, name, output);
+                });
         },
 
         // Write to console and the info record
