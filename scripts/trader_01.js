@@ -157,7 +157,7 @@ function calculateTrade(triDetails) {
         trade.price = trade.isForwards ? prices[trade.pair].lowestAsk : prices[trade.pair].highestBid;
         trade.amount = 0.99 * (trade.isForwards ? balances[trade.pair.split('-')[0]] * prices[trade.pair].lowestAsk :
             balances[trade.pair.split('-')[1]]);
-        Log.info('Components:', prices, prices[trade.pair].lowestAsk, balances[trade.pair.split('-')[1]], trade.amount)
+        return Log.info('Components:', prices, prices[trade.pair].lowestAsk, balances[trade.pair.split('-')[1]], trade.amount)
     });
 }
 
@@ -179,8 +179,8 @@ async function executeTriangle(isCW) {
         { pair: 'BTC_BCH', isForwards: !isCW, poloName: 'private_1' },
         { pair: 'ETH_BCH', isForwards: isCW, poloName: 'private_2' },
     ];
-    calculateTrade(triDetails);
-    Log.info('Calculating triangle details', triDetails);
+    await calculateTrade(triDetails);
+    await Log.info('Calculating triangle details', triDetails);
 
     process.exit(1);
 
