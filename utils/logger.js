@@ -2,7 +2,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const format = (args) => {
+const format = (...args) => {
     return args.map((arg) => {
         if (typeof arg === 'string' || arg instanceof String) {
             return arg;
@@ -53,13 +53,13 @@ module.exports = (name, ledgerDir, infoDir) => {
 
         // Write only to the official record
         ledger: (...args) => {
-            const output = format(args);
+            const output = format(...args);
             return writeToFile(ledgerDir, name, output);
         },
 
         // Write to console and the info record
         info: (...args) => {
-            const output = format(args);
+            const output = format(...args);
             console.log(output);
             return writeToFile(infoDir, name, output);
         },
