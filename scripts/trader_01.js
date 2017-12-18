@@ -130,12 +130,12 @@ async function finishTriangle() {
     await addTicker(10);
     tradeInProgress = false;
     emitter.emit('tryTrade');
-    Log.info(`After trade:`,
+    await Log.info(`After trade:`,
         `\n    Time:     ${Date.now().toString()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances,
         '\n    Record:   ', tradeCount);
-    Log.info('Shutting down');
+    await Log.info('Shutting down');
     process.exit(1);
 }
 
@@ -230,7 +230,7 @@ emitter.on('tryTrade', () => {
     if (tradeInProgress) {
         return;
     }
-    const time = new Date();
+    //const time = new Date();
     //Log.info(time.toString(), 'Checking for triangular trade');
     try {
         if (profitableCW()) {
