@@ -94,12 +94,12 @@ const profitableCW = () => {
     const time = new Date();
     Log.info(`\n${time.toString()}`);
     Log.info('CW:', ((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid);
-    return (((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid) > 0.008;
+    return (((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid) > 1.008;
 };
 
 const profitableCCW = () => {
     Log.info('CCW:', (1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid);
-    return ((1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid) > 0.008;
+    return ((1 / prices.BTC_BCH.lowestAsk) * prices.ETH_BCH.highestBid * prices.BTC_ETH.highestBid) > 1.008;
 };
 
 async function executeTrade({ pair, isForwards, poloName, price, amount }) {
@@ -155,9 +155,8 @@ function wait(delay) {
 function calculateTrade(triDetails) {
     triDetails.forEach((trade) => {
         trade.price = trade.isForwards ? prices[trade.pair].lowestAsk : prices[trade.pair].highestBid;
-        trade.amount = 0.99 * (trade.isForwards ? balances[trade.pair.split('-')[0]] * prices[trade.pair].lowestAsk :
-            balances[trade.pair.split('-')[1]]);
-        return Log.info('Components:', trade.pair.split('-'), trade.pair.split('-')[1], balances, balances[trade.pair.split('-')[1]], trade.amount)
+        trade.amount = 0.99 * (trade.isForwards ? balances[trade.pair.split('_')[0]] * prices[trade.pair].lowestAsk :
+            balances[trade.pair.split('_')[1]]);
     });
 }
 
@@ -179,10 +178,8 @@ async function executeTriangle(isCW) {
         { pair: 'BTC_BCH', isForwards: !isCW, poloName: 'private_1' },
         { pair: 'ETH_BCH', isForwards: isCW, poloName: 'private_2' },
     ];
-    await calculateTrade(triDetails);
-    await Log.info('Calculating triangle details', triDetails);
-
-    process.exit(1);
+    calculateTrade(triDetails);
+    Log.info('Calculating triangle details', triDetails);
 
     let orderNumbers = await Promise.all([
         executeTrade(triDetails[0]),
