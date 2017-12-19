@@ -206,9 +206,9 @@ async function executeTriangle(isCW) {
     let orders;
     try {
         orders = await Promise.all([
-            executeTrade(triDetails[0]),
-            executeTrade(triDetails[1]),
             executeTrade(triDetails[2]),
+            executeTrade(triDetails[1]),
+            executeTrade(triDetails[0]),
         ]);
     } catch (err) {
         await Log.info('Order placement failed', err);
