@@ -237,7 +237,7 @@ async function executeTriangle(isCW) {
         return;
     }
 
-    while (Date.now() - startTime < 120000) {
+    while (Date.now() - startTime < 20000) {
         let tradesComplete = false;
         try {
             tradesComplete = await tradesCompleted(orderNumbers);
@@ -250,10 +250,10 @@ async function executeTriangle(isCW) {
             await finishTriangle();
             return;
         }
-        await wait(3000);
+        await wait(2000);
     }
 
-    Log.info('Trade did not pass after 120s. Attempting auxiliary trades.', timestamp());
+    Log.info('Trade did not pass after 20s. Attempting auxiliary trades.', timestamp());
 
     let failureCount = 1;
     while (!await tradesCompleted(orderNumbers)) {
