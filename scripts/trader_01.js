@@ -43,6 +43,11 @@ process.on('unhandledRejection', (reason, p) => {
     Log.info('Unhandled Rejection at: Promise', p, 'reason:', reason);
 });
 
+const timestamp = () => {
+    const time = new Date();
+    return time.toString();
+};
+
 
 // Permanent rolling ticker
 const addTicker = (priority, once) => {
@@ -94,8 +99,7 @@ const addTicker = (priority, once) => {
 };
 
 const profitableCW = () => {
-    const time = new Date();
-    Log.info(`\n${time.toString()}`);
+    Log.info(`\n${timestamp()}`);
     Log.info('CW:', ((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid);
     return (((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid) > 1.008;
 };
@@ -122,11 +126,11 @@ async function executeTrade({ pair, isForwards, poloName, price, amount}) {
 }
 
 async function tradesCompleted(orderIds) {
-    await Log.info('\nAbout to check if trades are completed');
     // Get all outstanding orders, and flatten the array
     const ordersByCurrency = await queue.push({ flags: ['private_util'] }, () =>
         privatePolo.private_util.returnOpenOrders('all'));
     const currentOrders = Object.values(ordersByCurrency).reduce((acc, val) => acc.concat(val), []);
+    Log.info('Outstanding trades:', currentOrders, orderIds);
 
     // Compare the two arrays, check for overlaps
     const areCompleted = currentOrders.every((trade) => !orderIds.includes(trade.orderNumber));
@@ -136,11 +140,11 @@ async function tradesCompleted(orderIds) {
 let i = 0;
 async function finishTriangle() {
     const tradeNumber = ++tradeCount.total;
+    const d = new Date();
     await updateBalances();
     await addTicker(10);
     tradeInProgress = false;
     emitter.emit('tryTrade');
-    const d = Date.now();
     await Log.ledger(`\nAfter trade #${tradeNumber}:`,
         `\n    Time:     ${d.toString()}`,
         '\n    Prices:   ', prices,
@@ -186,9 +190,8 @@ async function cancelTrade(orderNumber) {
 
 async function executeTriangle(isCW) {
     tradeInProgress = true;
-    let d = Date.now();
     Log.ledger(`\nMaking ${isCW ? 'clockwise' : 'counter-clockwise'} trade (trade #${tradeCount.total + 1})`,
-        `\n    Time:     ${d.toString()}`,
+        `\n    Time:     ${timestamp()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances, '\n');
 
@@ -249,13 +252,11 @@ async function executeTriangle(isCW) {
         }
     }
 
-    d = Date.now();
-    Log.info('Trade did not pass after 10s. Attempting auxiliary trades.', d.toString());
+    Log.info('Trade did not pass after 10s. Attempting auxiliary trades.', timestamp());
 
     let failureCount = 1;
     while (!await tradesCompleted(orderNumbers)) {
-        d = Date.now();
-        Log.ledger(`Trade failed. Count: ${failureCount++}. Time: ${d.toString()}`);
+        Log.ledger(`Trade failed. Count: ${failureCount++}. Time: ${timestamp()}`);
         // Cancel outstanding trades
         const cancelled = [];
         cancelled[0] = await cancelTrade(orderNumbers[0]);
@@ -266,7 +267,7 @@ async function executeTriangle(isCW) {
             break;
         }
 
-        Log.info('Trade has not completed, but trades have been cancelled');
+        Log.info('Trade has not completed, but trades have been cancelled', cancelled);
 
         // Try again at the new price
         await addTicker(10, true);
@@ -274,7 +275,7 @@ async function executeTriangle(isCW) {
         Log.info('Ticker has been updated once');
 
         for (let j = 0; j < orderNumbers.length; j++) {
-            if (!cancelled[i]) {
+            if (!cancelled[j]) {
                 continue;
             }
             calculateTrade([triDetails[j]]);
@@ -283,9 +284,8 @@ async function executeTriangle(isCW) {
             orderNumbers[j] = orders[j].orderNumber;
         }
 
-        await wait(5000);
-        d = Date.now();
-        Log.info('Waited 10s', d.toString());
+        await wait(10000);
+        Log.info('Waited 10s', timestamp());
     }
 
     Log.ledger(`Trade failed after ${(Date.now() - startTime)/1000}s`);
@@ -315,9 +315,8 @@ emitter.on('tryTrade', () => {
 async function initialize() {
     await updateBalances();
     await addTicker(10, true);
-    const time = new Date();
     await Log.ledger(`Initializing trader`,
-        `\n    Time:     ${time.toString()}`,
+        `\n    Time:     ${timestamp()}`,
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances, '\n');
     tradeInProgress = false;
