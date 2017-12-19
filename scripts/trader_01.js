@@ -137,7 +137,7 @@ async function tradesCompleted(orderIds) {
     return areCompleted;
 }
 
-let i = 0;
+let tempTradeCounter = 0;
 async function finishTriangle() {
     const tradeNumber = ++tradeCount.total;
     const d = new Date();
@@ -150,7 +150,7 @@ async function finishTriangle() {
         '\n    Prices:   ', prices,
         '\n    Balances: ', balances,
         '\n    Record:   ', tradeCount, '\n');
-    if (i++ === 4) {
+    if (tempTradeCounter++ === 4) {
         await Log.info('Shutting down');
         process.exit(1);
     }
@@ -237,7 +237,7 @@ async function executeTriangle(isCW) {
         return;
     }
 
-    while (Date.now() - startTime < 10000) {
+    while (Date.now() - startTime < 120000) {
         let tradesComplete = false;
         try {
             tradesComplete = await tradesCompleted(orderNumbers);
@@ -250,9 +250,10 @@ async function executeTriangle(isCW) {
             await finishTriangle();
             return;
         }
+        await wait(3000);
     }
 
-    Log.info('Trade did not pass after 10s. Attempting auxiliary trades.', timestamp());
+    Log.info('Trade did not pass after 120s. Attempting auxiliary trades.', timestamp());
 
     let failureCount = 1;
     while (!await tradesCompleted(orderNumbers)) {
