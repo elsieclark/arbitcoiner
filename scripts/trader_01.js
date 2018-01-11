@@ -66,8 +66,8 @@ const timestamp = () => {
 
 
 // Permanent rolling ticker
-const addTicker = (priority, once) => {
-    return queue.push({ flags: ['ticker'], priority: priority || 5 }, () => { return poloniex.returnTicker(); })
+const addTicker = (priority = 5, once = false) => {
+    return queue.push({ flags: ['ticker'], priority: priority }, () => { return poloniex.returnTicker(); })
         .then((result) => {
             let changed = false;
 
@@ -93,7 +93,7 @@ const addTicker = (priority, once) => {
             }
         });
 };
-
+addTicker();
 
 /*
 const profitableCW = () => {
