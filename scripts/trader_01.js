@@ -71,6 +71,8 @@ const addTicker = (priority, once) => {
         .then((result) => {
             let changed = false;
 
+            console.log('Ticker occurred', typeof result.BTC_ETH.highestBid, result.BTC_ETH.highestBid);
+
             if (result.BTC_ETH.highestBid !== status.BTC.ETH.highestBid) {
                 changed = true;
                 status.BTC.ETH.highestBid = result.BTC_ETH.highestBid;
