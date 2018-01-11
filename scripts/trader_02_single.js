@@ -8,7 +8,7 @@ const Queue    = require('superqueue');
 
 const config   = require(appRoot + '/config/local.config.json');
 
-const Log = Logger('trader_01', appRoot + '/data/logs/ledger', appRoot + '/data/logs/info');
+const Log = Logger('trader_02', appRoot + '/data/logs/ledger', appRoot + '/data/logs/info');
 const emitter = new events.EventEmitter();
 const poloniex = new Poloniex();
 const privatePolo = {
@@ -34,10 +34,26 @@ queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
 queue.addFlag('ticker', { concurrency: 3, interval: 400 });
 
-const prices = { BTC_ETH: {}, BTC_BCH: {}, ETH_BCH: {} };
-const balances = { BTC: 0, ETH: 0, BCH: 0 };
-
-let tradeInProgress = true;
+const status = {
+    BTC: {
+        balance: 0,
+        busy: false,
+        ETH: { lowestAsk: 0, highestBid: 0 },
+        BCH: { lowestAsk: 0, highestBid: 0 },
+    },
+    ETH: {
+        balance: 0,
+        busy: false,
+        BTC: { lowestAsk: 0, highestBid: 0 },
+        BCH: { lowestAsk: 0, highestBid: 0 },
+    },
+    BCH: {
+        balance: 0,
+        busy: false,
+        BTC: { lowestAsk: 0, highestBid: 0 },
+        ETH: { lowestAsk: 0, highestBid: 0 },
+    },
+};
 
 process.on('unhandledRejection', (reason, p) => {
     Log.info('Unhandled Rejection at: Promise', p, 'reason:', reason);
@@ -50,39 +66,19 @@ const timestamp = () => {
 
 
 // Permanent rolling ticker
-const addTicker = (priority, once) => {
-    if (tradeInProgress && !once) {
-        return Promise.resolve();
-    }
-    return queue.push({ flags: ['ticker'], priority: priority || 5 }, () => { return poloniex.returnTicker(); })
+const addTicker = (priority = 5, once = false) => {
+    return queue.push({ flags: ['ticker'], priority: priority }, () => { return poloniex.returnTicker(); })
         .then((result) => {
             let changed = false;
-            const newBTC_ETH = {
-                highestBid: result.BTC_ETH.highestBid,
-                lowestAsk: result.BTC_ETH.lowestAsk,
-            };
-            if (JSON.stringify(prices.BTC_ETH) !== JSON.stringify(newBTC_ETH)) {
-                prices.BTC_ETH = newBTC_ETH;
+
+            console.log('Ticker occurred', typeof result.BTC_ETH.highestBid, result.BTC_ETH.highestBid);
+
+            if (result.BTC_ETH.highestBid !== status.BTC.ETH.highestBid) {
                 changed = true;
+                status.BTC.ETH.highestBid = result.BTC_ETH.highestBid;
+                status.ETH.BTC.lowestAsk = 1/ result.BTC_ETH.highestBid;
             }
 
-            const newBTC_BCH = {
-                highestBid: result.BTC_BCH.highestBid,
-                lowestAsk: result.BTC_BCH.lowestAsk,
-            };
-            if (JSON.stringify(prices.BTC_BCH) !== JSON.stringify(newBTC_BCH)) {
-                prices.BTC_BCH = newBTC_BCH;
-                changed = true;
-            }
-
-            const newETH_BCH = {
-                highestBid: result.ETH_BCH.highestBid,
-                lowestAsk: result.ETH_BCH.lowestAsk,
-            };
-            if (JSON.stringify(prices.ETH_BCH) !== JSON.stringify(newETH_BCH)) {
-                prices.ETH_BCH = newETH_BCH;
-                changed = true;
-            }
             if (changed) {
                 //Log.info(Date.now() + ' ' + JSON.stringify(prices));
                 emitter.emit('tryTrade');
@@ -97,7 +93,9 @@ const addTicker = (priority, once) => {
             }
         });
 };
+addTicker();
 
+/*
 const profitableCW = () => {
     Log.info(`\n${timestamp()}`);
     Log.info('CW:', ((1 / prices.BTC_ETH.lowestAsk) / prices.ETH_BCH.lowestAsk) * prices.BTC_BCH.highestBid);
@@ -325,3 +323,4 @@ async function initialize() {
 }
 
 initialize();
+*/
