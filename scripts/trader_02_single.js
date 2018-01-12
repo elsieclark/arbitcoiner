@@ -69,16 +69,45 @@ const addTicker = (priority = 5, once = false) => {
         .then((result) => {
             let changed = false;
 
-            console.log('Ticker occurred', typeof result.BTC_ETH.highestBid, result.BTC_ETH.highestBid);
-
-            if (result.BTC_ETH.highestBid !== status.BTC.ETH.highestBid) {
+            if (status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid) {
                 changed = true;
-                status.BTC.ETH.highestBid = result.BTC_ETH.highestBid;
-                status.ETH.BTC.lowestAsk = 1/ result.BTC_ETH.highestBid;
+                status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid;
+                status.ETH.BTC.lowestAsk = 1/ +result.BTC_ETH.highestBid;
+            }
+
+            if (status.BTC.ETH.lowestAsk = +result.BTC_ETH.lowestAsk) {
+                changed = true;
+                status.BTC.ETH.lowestAsk = +result.BTC_ETH.lowestAsk;
+                status.ETH.BTC.highestBid = 1/ +result.BTC_ETH.lowestAsk;
+            }
+
+            if (status.BTC.BCH.highestBid = +result.BTC_BCH.highestBid) {
+                changed = true;
+                status.BTC.BCH.highestBid = +result.BTC_BCH.highestBid;
+                status.BCH.BTC.lowestAsk = 1/ +result.BTC_BCH.highestBid;
+            }
+
+            if (status.BTC.BCH.lowestAsk = +result.BTC_BCH.lowestAsk) {
+                changed = true;
+                status.BTC.BCH.lowestAsk = +result.BTC_BCH.lowestAsk;
+                status.BCH.BTC.highestBid = 1/ +result.BTC_BCH.lowestAsk;
+            }
+
+            if (status.ETH.BCH.highestBid = +result.ETH_BCH.highestBid) {
+                changed = true;
+                status.ETH.BCH.highestBid = +result.ETH_BCH.highestBid;
+                status.BCH.ETH.lowestAsk = 1/ +result.ETH_BCH.highestBid;
+            }
+
+            if (status.ETH.BCH.lowestAsk = +result.ETH_BCH.lowestAsk) {
+                changed = true;
+                status.ETH.BCH.lowestAsk = +result.ETH_BCH.lowestAsk;
+                status.BCH.ETH.highestBid = 1/ +result.ETH_BCH.lowestAsk;
             }
 
             if (changed) {
                 //Log.info(Date.now() + ' ' + JSON.stringify(prices));
+                console.log('Changed', typeof status.ETH.BCH.lowestAsk, status);
                 emitter.emit('tryTrade');
             }
         })
