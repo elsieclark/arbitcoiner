@@ -8,6 +8,10 @@ const Queue    = require('superqueue');
 
 const config   = require(appRoot + '/config/local.config.json');
 
+process.on('unhandledRejection', (reason, p) => {
+    Log.info('Unhandled Rejection at: Promise', p, 'reason:', reason);
+});
+
 const Log = Logger('trader_02', appRoot + '/data/logs/ledger', appRoot + '/data/logs/info');
 const emitter = new events.EventEmitter();
 const poloniex = new Poloniex();
@@ -18,11 +22,6 @@ const privatePolo = {
     private_util: new Poloniex(...config.private_util),
 };
 
-const tradeCount = {
-    total: 0,
-    successful: 0,
-    unsuccessful: 0,
-};
 
 const queue = new Queue({
     rate: 6,
@@ -33,6 +32,7 @@ queue.addFlag('private_1', { concurrency: 1 });
 queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
 queue.addFlag('ticker', { concurrency: 3, interval: 400 });
+
 
 const status = {
     BTC: {
@@ -55,9 +55,6 @@ const status = {
     },
 };
 
-process.on('unhandledRejection', (reason, p) => {
-    Log.info('Unhandled Rejection at: Promise', p, 'reason:', reason);
-});
 
 const timestamp = () => {
     const time = new Date();
@@ -67,6 +64,7 @@ const timestamp = () => {
 
 // Permanent rolling ticker
 const addTicker = (priority = 5, once = false) => {
+    console.log('Adding ticker');
     return queue.push({ flags: ['ticker'], priority: priority }, () => { return poloniex.returnTicker(); })
         .then((result) => {
             let changed = false;
@@ -94,6 +92,7 @@ const addTicker = (priority = 5, once = false) => {
         });
 };
 addTicker();
+console.log('Reached EOF');
 
 /*
 const profitableCW = () => {
