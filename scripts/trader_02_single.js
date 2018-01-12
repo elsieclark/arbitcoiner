@@ -33,11 +33,12 @@ queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
 queue.addFlag('ticker', { concurrency: 3, interval: 400 });
 
-
+const CURRENCIES = ['BTC', 'ETH', 'BCH'];
 const status = {
     BTC: {
         balance: 0,
         busy: false,
+        BTC: { lowestAsk: 1, highestBid: 1 },
         ETH: { lowestAsk: 0, highestBid: 0 },
         BCH: { lowestAsk: 0, highestBid: 0 },
     },
@@ -45,6 +46,7 @@ const status = {
         balance: 0,
         busy: false,
         BTC: { lowestAsk: 0, highestBid: 0 },
+        ETH: { lowestAsk: 1, highestBid: 1 },
         BCH: { lowestAsk: 0, highestBid: 0 },
     },
     BCH: {
@@ -52,6 +54,7 @@ const status = {
         busy: false,
         BTC: { lowestAsk: 0, highestBid: 0 },
         ETH: { lowestAsk: 0, highestBid: 0 },
+        BCH: { lowestAsk: 1, highestBid: 1 },
     },
 };
 
@@ -120,8 +123,24 @@ const addTicker = (priority = 5, once = false) => {
             }
         });
 };
+
+const appraisePortfolioIn = (targetCurrency, portfolio) => {
+    return CURRENCIES.reduce((acc, curr) => acc + portfolio[curr] * status[targetCurrency][curr].highestBid, 0);
+};
+
+const appraiseCurrentPortfolioIn = (targetCurrency) => {
+    return CURRENCIES.reduce((acc, curr) => acc + status[curr].balance * status[targetCurrency][curr].highestBid, 0);
+};
+
+
+
+
+
+
 addTicker();
 console.log('Reached EOF');
+
+
 
 /*
 const profitableCW = () => {
