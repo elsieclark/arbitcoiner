@@ -222,9 +222,9 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
             return false;
         }
     } else if (boughtCoin === 'BTC') {
-        if (status[soldCoin].balance * status.BTC[soldCoin] < 0.00012) {
+        if (status[soldCoin].balance * status.BTC[soldCoin].highestBid < 0.00012) {
             Log.ledger(`\n${timestamp()} Can't trade: Not enough ${soldCoin} (have ${status[soldCoin].balance} `,
-                `[worth ${status[soldCoin].balance * frozenStatus.ETH[soldCoin]} BTC])\n`);
+                `[worth ${status[soldCoin].balance * frozenStatus.ETH[soldCoin].highestBid} BTC])\n`);
             return false;
         }
     } else if (soldCoin === 'ETH') {
@@ -233,9 +233,9 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
             return false;
         }
     } else if (boughtCoin === 'ETH') {
-        if (status.BCH.balance * status.ETH.BCH < 0.00012) {
+        if (status.BCH.balance * status.ETH.BCH.highestBid < 0.00012) {
             Log.ledger(`\nCan't trade: Not enough BCH (have ${status.BCH.balance} `,
-                `[worth ${status.BCH.balance * frozenStatus.ETH.BCH} ETH])\n`);
+                `[worth ${status.BCH.balance * frozenStatus.ETH.BCH.highestBid} ETH])\n`);
             return false;
         }
     }
