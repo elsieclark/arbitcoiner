@@ -129,6 +129,24 @@ const coinListWithExclude = (coin) => {
     }, []);
 };
 
+const profits = {
+    BTC: {
+        BTC: { BTC: 0, ETH: 0, BCH: 0 },
+        ETH: { BTC: 0, ETH: 0, BCH: 0 },
+        BCH: { BTC: 0, ETH: 0, BCH: 0 },
+    },
+    ETH: {
+        BTC: { BTC: 0, ETH: 0, BCH: 0 },
+        ETH: { BTC: 0, ETH: 0, BCH: 0 },
+        BCH: { BTC: 0, ETH: 0, BCH: 0 },
+    },
+    BCH: {
+        BTC: { BTC: 0, ETH: 0, BCH: 0 },
+        ETH: { BTC: 0, ETH: 0, BCH: 0 },
+        BCH: { BTC: 0, ETH: 0, BCH: 0 },
+    },
+};
+
 const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
     const initialPortfolio = {};
     initialPortfolio[soldCoin] = status[soldCoin].balance;
@@ -144,19 +162,22 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
 
     const finalValue = appraisePortfolioIn(valueCoin, finalPortfolio);
 
-    Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-        `% gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}`);
-
-    if ((finalValue - initialValue) / initialValue > 0.005) {
-        Log.ledger(`\n    Trade found! ${timestamp()}`,
-            `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
-            `\n        Initial value: ${initialValue}`,
-            `\n        Initial portfolio: `, initialPortfolio,
-            `\n        Final value: ${finalValue}`,
-            `\n        Final portfolio: `, finalPortfolio,
-            `\n        Final % gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}\n`,
-            status, '\n');
+    if (profits[soldCoin][boughtCoin][valueCoin] !== ((finalValue - initialValue) / initialValue).toFixed(5)) {
+        profits[soldCoin][boughtCoin][valueCoin] = ((finalValue - initialValue) / initialValue).toFixed(5);
+        Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
+            `% gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}`);
+        if ((finalValue - initialValue) / initialValue > 0.005) {
+            Log.ledger(`\n    Trade found! ${timestamp()}`,
+                `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
+                `\n        Initial value: ${initialValue}`,
+                `\n        Initial portfolio: `, initialPortfolio,
+                `\n        Final value: ${finalValue}`,
+                `\n        Final portfolio: `, finalPortfolio,
+                `\n        Final % gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}\n`,
+                status, '\n');
+        }
     }
+
     return (finalValue - initialValue) / initialValue > 0.005;
 };
 
