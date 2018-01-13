@@ -179,9 +179,9 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
     };
 
     const percentChanges = {
-        soldCoin: ((finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin).toFixed(5) * 100,
-        boughtCoin: ((finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin).toFixed(5) * 100,
-        valueCoin: ((finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin).toFixed(5) * 100,
+        soldCoin: (100 * (finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin).toFixed(4),
+        boughtCoin: (100 * (finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin).toFixed(4),
+        valueCoin: (100 * (finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin).toFixed(4),
     };
     const percentChangeSum = percentChanges.soldCoin + percentChanges.boughtCoin + percentChanges.valueCoin;
 
@@ -189,7 +189,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
         profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum;
 
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-            `% gain: ${percentChanges.soldCoin}, ${percentChanges.boughtCoin}, ${percentChanges.valueCoin}, `,
+            `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin}, ${percentChanges.valueCoin}, `,
             `Sum: ${percentChangeSum}, `,
             `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
             `Ticker calls: ${tickerData.executions}`);
