@@ -22,6 +22,11 @@ const privatePolo = {
     private_util: new Poloniex(...config.private_util),
 };
 
+const tickerData = {
+    startTime: 0,
+    executions: 0,
+};
+
 
 const queue = new Queue({
     rate: 6,
@@ -106,6 +111,7 @@ const addTicker = (priority = 5, once = false) => {
         })
         .then(() => {
             if (!once) {
+                tickerData.executions++;
                 setImmediate(addTicker);
             }
         });
@@ -167,7 +173,9 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
     if (profits[soldCoin][boughtCoin][valueCoin] !== ((finalValue - initialValue) / initialValue).toFixed(5)) {
         profits[soldCoin][boughtCoin][valueCoin] = ((finalValue - initialValue) / initialValue).toFixed(5);
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-            `% gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}`);
+            `% gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}, `,
+            `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.executions) / 1000)}`);
+
         if ((finalValue - initialValue) / initialValue > 0.005) {
             Log.ledger(`\n    Trade found! ${timestamp()}`,
                 `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
@@ -234,6 +242,7 @@ const initialize = async() => {
     await addTicker(5, true);
     await Log.ledger(timestamp(), status, '\n');
     Log.console('Initialized');
+    tickerData.startTime = Date.now();
     addTicker();
     addTicker();
 };
