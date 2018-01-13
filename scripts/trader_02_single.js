@@ -189,7 +189,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
         profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum;
 
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-            `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin}, ${percentChanges.valueCoin}, `,
+            `% gain: ${percentChanges.soldCoin}, ${percentChanges.boughtCoin}, ${percentChanges.valueCoin}, `,
             `Sum: ${percentChangeSum}, `,
             `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
             `Ticker calls: ${tickerData.executions}`);

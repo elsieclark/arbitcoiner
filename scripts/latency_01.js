@@ -48,4 +48,3 @@ const getTicker = async() => {
 for (let i = 0; i < calls; i++) {
     queue.push(getTicker);
 }
-
