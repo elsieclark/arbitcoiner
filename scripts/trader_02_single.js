@@ -55,9 +55,7 @@ const timestamp = () => {
 
 // Permanent rolling ticker
 const addTicker = (priority = 5, once = false) => {
-    let execStart
     return queue.push({ flags: ['ticker'], priority: priority }, () => {
-        execStart = Date.now();
         return poloniex.returnTicker();
     })
         .then((result) => {
@@ -100,7 +98,7 @@ const addTicker = (priority = 5, once = false) => {
             }
 
             if (changed) {
-                //emitter.emit('tryTrade');
+                emitter.emit('tryTrade');
             }
         })
         .catch((err) => {
