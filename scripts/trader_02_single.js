@@ -252,13 +252,13 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
     const rate = frozenStatus[soldCoin][boughtCoin].lowestAsk;
     status[soldCoin].busy = true;
     const polo = privatePolo[soldCoin];
-    Log.ledger(`\n    Making trade.`,
-        `\n        Selling: ${soldCoin}, `,
-        `\n        Buying:  ${boughtCoin}, `,
-        `\n        Amount:  ${frozenStatus[soldCoin].balance}`,
-        `\n        Rate:    ${rate}`,
-        `\n        Projected final amount: ${frozenStatus[boughtCoin].balance + (0.9975 * frozenStatus[soldCoin].balance / rate)}`,
-        `\n\n       `, frozenStatus, '\n');
+    Log.ledger(`\nMaking trade.`,
+        `\n    Selling: ${soldCoin}, `,
+        `\n    Buying:  ${boughtCoin}, `,
+        `\n    Amount:  ${frozenStatus[soldCoin].balance}`,
+        `\n    Rate:    ${rate}`,
+        `\n    Projected final amount: ${frozenStatus[boughtCoin].balance + (0.9975 * frozenStatus[soldCoin].balance / rate)}`,
+        `\n\n   `, frozenStatus, '\n');
 
     return await queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
         Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`, polo, polo.sell, polo.sell(), 'end');
@@ -294,7 +294,7 @@ const tryTradeForCoin = async(soldCoin) => {
     try {
         const tradeResult = await makeTrade(soldCoin, boughtCoin, frozenStatus);
         await updateBalances();
-        await Log.ledger(`\n${timestamp()}    Trade #${tradeCount} Executed:`, tradeResult, '\n');
+        await Log.ledger(`\n${timestamp()}    Trade #${tradeCount} Executed:`, tradeResult);
 
         const initialPortfolio = {};
         initialPortfolio[soldCoin] = frozenStatus[soldCoin].balance;
@@ -325,20 +325,20 @@ const tryTradeForCoin = async(soldCoin) => {
         };
         const percentChangeSum = percentChanges.soldCoin + percentChanges.boughtCoin + percentChanges.valueCoin;
 
-        await Log.ledger(`\n    Trade completed! ${timestamp()}`,
-            `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
-            `\n        Initial value: ${initialValues.valueCoin}`,
-            `\n        Initial portfolio: `, initialPortfolio,
-            `\n        Final value: ${finalValues.valueCoin}`,
-            `\n        Final portfolio: `, finalPortfolio,
-            `\n        Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin.toFixed(3)}`,
-            `\n        Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin.toFixed(3)}`,
-            `\n        Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin.toFixed(3)}`,
-            `\n        Final % gain total         : ${percentChangeSum.toFixed(3)}`,
-            `\n\n       `, status, '\n');
+        await Log.ledger(`\nTrade completed! ${timestamp()}`,
+            `\n    Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
+            `\n    Initial value: ${initialValues.valueCoin}`,
+            `\n    Initial portfolio: `, initialPortfolio,
+            `\n    Final value:   ${finalValues.valueCoin}`,
+            `\n    Final portfolio:   `, finalPortfolio,
+            `\n    Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin.toFixed(3)}`,
+            `\n    Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin.toFixed(3)}`,
+            `\n    Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin.toFixed(3)}`,
+            `\n    Final % gain total         : ${percentChangeSum.toFixed(3)}`,
+            `\n\n   `, status);
 
         tradeCount++;
-        if (tradeCount > 2) {
+        if (tradeCount > 6) {
             await Log.ledger(`\nExecuted trade #${tradeCount}. Quitting.`);
             process.exit(1);
         }
@@ -368,7 +368,7 @@ const initialize = async() => {
     await wait(1000);
     await updateBalances();
     await addTicker(5, true);
-    await Log.ledger(timestamp(), status, '\n');
+    await Log.ledger(timestamp(), status);
     Log.console('Initialized');
     tickerData.startTime = Date.now();
     addTicker();
