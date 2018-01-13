@@ -96,7 +96,6 @@ const addTicker = (priority = 5, once = false) => {
             }
 
             if (changed) {
-                console.log('Changed', typeof status.ETH.BCH.lowestAsk, status);
                 emitter.emit('tryTrade');
             }
         })
@@ -155,7 +154,8 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
             `\n        Initial portfolio: `, initialPortfolio,
             `\n        Final value: ${finalValue}`,
             `\n        Final portfolio: `, finalPortfolio,
-            `\n        Final % gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}\n`);
+            `\n        Final % gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}\n`,
+            status, '\n');
     }
     return (finalValue - initialValue) / initialValue > 0.005;
 };
