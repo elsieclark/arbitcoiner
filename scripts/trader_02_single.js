@@ -196,9 +196,16 @@ emitter.on('tryTrade', () => {
     COINS.forEach(tryTradeForCoin);
 });
 
+function wait(delay) {
+    return new Promise((resolve) => {
+        setTimeout(() => resolve(), delay);
+    });
+}
+
 const initialize = async() => {
     await updateBalances();
     addTicker(5, true);
+    await wait(1000);
     await Log.ledger(timestamp(), status, '\n');
     addTicker();
 };
