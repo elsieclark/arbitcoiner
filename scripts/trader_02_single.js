@@ -362,6 +362,8 @@ function wait(delay) {
 
 const initialize = async() => {
     Log.console('Initializing');
+    await Log.ledger('\n');
+    await wait(1000);
     await updateBalances();
     await addTicker(5, true);
     await Log.ledger(timestamp(), status, '\n');
