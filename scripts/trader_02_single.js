@@ -174,7 +174,8 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
         profits[soldCoin][boughtCoin][valueCoin] = ((finalValue - initialValue) / initialValue).toFixed(5);
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
             `% gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}, `,
-            `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}`);
+            `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
+            `Ticker calls: ${tickerData.executions}`);
 
         if ((finalValue - initialValue) / initialValue > 0.005) {
             Log.ledger(`\n    Trade found! ${timestamp()}`,
