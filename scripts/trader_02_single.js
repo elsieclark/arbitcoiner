@@ -258,6 +258,8 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
         `\n\n       `, frozenStatus, '\n');
 
     return await queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
+        console.log('Gamma2', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance);
+        console.log('Delta2', typeof `${boughtCoin}_${soldCoin}`, typeof 1/rate, typeof frozenStatus.soldCoin.balance);
         Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`);
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
             console.log('Alpha');
