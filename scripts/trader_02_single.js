@@ -61,9 +61,12 @@ const timestamp = () => {
 // Permanent rolling ticker
 const addTicker = (priority = 5, once = false) => {
     return queue.push({ flags: ['ticker'], priority: priority }, () => {
-        return poloniex.returnTicker();
+        return Promise.race([poloniex.returnTicker(), wait(3000)]);
     })
         .then((result) => {
+            if (!result) {
+                return;
+            }
             let changed = false;
 
             if (status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid) {
@@ -353,7 +356,7 @@ emitter.on('tryTrade', () => {
 
 function wait(delay) {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(), delay);
+        setTimeout(() => resolve(false), delay);
     });
 }
 
