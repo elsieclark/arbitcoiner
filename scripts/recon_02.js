@@ -67,11 +67,11 @@ poloniex.on('open', () => {
 });
 
 poloniex.on('close', (reason, details) => {
-    console.log(`Poloniex WebSocket connection disconnected`);
+    console.log(`Poloniex WebSocket connection disconnected`, reason, details);
 });
 
 poloniex.on('error', (error) => {
-    console.log(`An error has occured`);
+    console.log(`An error has occured`, error);
 });
 
 poloniex.openWebSocket({ version: 2 });
