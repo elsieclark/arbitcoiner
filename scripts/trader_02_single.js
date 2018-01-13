@@ -261,14 +261,11 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
         Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`);
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
             console.log('Alpha');
-            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, frozenStatus.soldCoin.balance/rate, false, true, false, (a,b,c) => {
-                console.log('Beta',a,b,c)
-            });
+            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, frozenStatus.soldCoin.balance/rate, false, true, false);
         } else {
-            console.log('Gamma');
-            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance, false, true, false, (a,b,c) => {
-                console.log('Delta',a,b,c)
-            });
+            console.log('Gamma', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance);
+            console.log('Delta', typeof `${boughtCoin}_${soldCoin}`, typeof 1/rate, typeof frozenStatus.soldCoin.balance);
+            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance, false, true, false);
         }
     });
 };
