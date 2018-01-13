@@ -86,6 +86,8 @@ const handleTicker = (data) => {
     let changed = false;
     if (data.currencyPair === 'BTC_ETH') {
         tickerData.executions++;
+        Log.console(`Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
+            `Ticker calls: ${tickerData.executions}`);
         if (status.BTC.ETH.highestBid = (+data.highestBid).toFixed(8)) {
             changed = true;
             status.BTC.ETH.highestBid = (+data.highestBid).toFixed(8);
@@ -128,12 +130,10 @@ const handleTicker = (data) => {
 };
 
 async function updateBalances() {
-    console.log('Alpha')
     const newBal = await queue.push({ flags: ['private_util'] }, () => privatePolo.private_util.returnBalances());
     status.BTC.balance = newBal.BTC;
     status.BCH.balance = newBal.BCH;
     status.ETH.balance = newBal.ETH;
-    console.log('Beta')
 }
 
 const appraisePortfolioIn = (targetCoin, portfolio) => {
