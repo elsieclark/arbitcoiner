@@ -179,18 +179,18 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
     };
 
     const percentChanges = {
-        soldCoin: (100 * (finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin).toFixed(4),
-        boughtCoin: (100 * (finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin).toFixed(4),
-        valueCoin: (100 * (finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin).toFixed(4),
+        soldCoin: (100 * (finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin),
+        boughtCoin: (100 * (finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin),
+        valueCoin: (100 * (finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin),
     };
     const percentChangeSum = percentChanges.soldCoin + percentChanges.boughtCoin + percentChanges.valueCoin;
 
-    if (profits[soldCoin][boughtCoin][valueCoin] !== percentChangeSum) {
-        profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum;
+    if (profits[soldCoin][boughtCoin][valueCoin] !== percentChangeSum.toFixed(3)) {
+        profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum.toFixed(3);
 
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-            `% gain: ${percentChanges.soldCoin}, ${percentChanges.boughtCoin}, ${percentChanges.valueCoin}, `,
-            `Sum: ${percentChangeSum}, `,
+            `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin.toFixed(3)}, ${percentChanges.valueCoin.toFixed(3)}, `,
+            `Sum: ${percentChangeSum.toFixed(3)}, `,
             `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
             `Ticker calls: ${tickerData.executions}`);
         if (percentChangeSum > 0) {
@@ -200,10 +200,10 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
                 `\n        Initial portfolio: `, initialPortfolio,
                 `\n        Final value: ${finalValues.valueCoin}`,
                 `\n        Final portfolio: `, finalPortfolio,
-                `\n        Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin}`,
-                `\n        Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin}`,
-                `\n        Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin}`,
-                `\n        Final % gain total         : ${percentChangeSum}`,
+                `\n        Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin.toFixed(3)}`,
+                `\n        Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin.toFixed(3)}`,
+                `\n        Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin.toFixed(3)}`,
+                `\n        Final % gain total         : ${percentChangeSum.toFixed(3)}`,
                 `\n\n       `, status, '\n');
         }
     }
