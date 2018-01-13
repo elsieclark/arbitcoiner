@@ -245,7 +245,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
     return percentChangeSum > 0.1;
 };
 
-const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
+const makeTrade = (soldCoin, boughtCoin, frozenStatus) => {
     const rate = frozenStatus[soldCoin][boughtCoin].lowestAsk;
     status[soldCoin].busy = true;
     const polo = privatePolo[soldCoin];
@@ -257,17 +257,18 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
         `\n        Projected final amount: ${frozenStatus[boughtCoin].balance + (0.9975 * frozenStatus[soldCoin].balance / rate)}`,
         `\n\n       `, frozenStatus, '\n');
 
-    return await queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
-        Log.info('Gamma2', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance);
-        Log.info('Delta2', typeof `${boughtCoin}_${soldCoin}`, typeof 1/rate, typeof frozenStatus.soldCoin.balance);
+    Log.info('Gamma2', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance);
+    Log.info('Delta2', typeof `${boughtCoin}_${soldCoin}`, typeof 1/rate, typeof frozenStatus.soldCoin.balance);
+
+    return queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
         Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`);
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
             console.log('Alpha');
             return polo.buy(`${soldCoin}_${boughtCoin}`, rate, frozenStatus.soldCoin.balance/rate, false, true, false);
         } else {
-            Log.info('Gamma', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance);
+            Log.info('Gamma', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance*0.0001);
             Log.info('Delta', typeof `${boughtCoin}_${soldCoin}`, typeof 1/rate, typeof frozenStatus.soldCoin.balance);
-            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance, false, true, false);
+            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus.soldCoin.balance*0.0001, false, true, false);
         }
     });
 };
