@@ -261,14 +261,14 @@ const makeTrade = (soldCoin, boughtCoin, frozenStatus) => {
         `\n\n       `, frozenStatus, '\n');
 
     Log.info('Gamma2', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus[soldCoin].balance);
-    Log.info('Delta2', typeof `${boughtCoin}_${soldCoin}`, typeof 1/rate, typeof frozenStatus[soldCoin].balance);
+    Log.info('Delta2', typeof `${boughtCoin}_${soldCoin}`, typeof (1/rate), typeof frozenStatus[soldCoin].balance);
 
     return queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
-        Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`);
+        Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`, polo, polo.sell);
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
-            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, frozenStatus[soldCoin].balance/rate, false, true, false);
+            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, 0.997*frozenStatus[soldCoin].balance/rate, false, true, false);
         } else {
-            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus[soldCoin].balance, false, true, false);
+            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, 0.997*frozenStatus[soldCoin].balance, false, true, false);
         }
     });
 };
