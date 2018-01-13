@@ -241,11 +241,11 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
     }
 
     if (status[soldCoin].busy) {
-        Log.ledger(`\n${timestamp()} Can't make trade: ${soldCoin} is busy\n`);
+        Log.ledger(`${timestamp()} Can't make trade: ${soldCoin} is busy`);
         return false;
     }
 
-    return percentChangeSum > -1;
+    return percentChangeSum > 0.2;
 };
 
 const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
@@ -266,9 +266,9 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
     return await queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
         Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`, polo, polo.sell, polo.sell(), 'end');
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
-            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, 0.997*frozenStatus[soldCoin].balance/rate, false, false, false);
+            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, 0.997*frozenStatus[soldCoin].balance/rate, 0, 1, 0);
         } else {
-            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, 0.997*frozenStatus[soldCoin].balance, false, false, false);
+            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, 0.997*frozenStatus[soldCoin].balance, 0, 1, 0);
         }
     });
 };
@@ -296,6 +296,7 @@ const tryTradeForCoin = async(soldCoin) => {
 
     try {
         const tradeResult = await makeTrade(soldCoin, boughtCoin, frozenStatus);
+        await updateBalances();
         await Log.ledger(`\n${timestamp()}    Trade #${tradeCount} Executed:`, tradeResult, '\n');
 
         const initialPortfolio = {};
@@ -344,6 +345,7 @@ const tryTradeForCoin = async(soldCoin) => {
             await Log.ledger(`\nExecuted trade #${tradeCount}. Quitting.`);
             process.exit(1);
         }
+        status[soldCoin].busy = false;
     } catch (err) {
         await Log.info('Order placement failed', err);
         process.exit(1);
