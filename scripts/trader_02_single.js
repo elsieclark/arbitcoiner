@@ -161,34 +161,54 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
     initialPortfolio[boughtCoin] = 0;
     initialPortfolio[valueCoin] = 0;
 
-    const initialValue = appraisePortfolioIn(valueCoin, initialPortfolio);
+    const initialValues = {
+        soldCoin: appraisePortfolioIn(soldCoin, initialPortfolio),
+        boughtCoin: appraisePortfolioIn(boughtCoin, initialPortfolio),
+        valueCoin: appraisePortfolioIn(valueCoin, initialPortfolio),
+    };
 
     const finalPortfolio = {};
     finalPortfolio[soldCoin] = 0;
     finalPortfolio[boughtCoin] = initialPortfolio[soldCoin] * status[boughtCoin][soldCoin].highestBid * 0.9975;
     finalPortfolio[valueCoin] = 0;
 
-    const finalValue = appraisePortfolioIn(valueCoin, finalPortfolio);
+    const finalValues = {
+        soldCoin: appraisePortfolioIn(soldCoin, finalPortfolio),
+        boughtCoin: appraisePortfolioIn(boughtCoin, finalPortfolio),
+        valueCoin: appraisePortfolioIn(valueCoin, finalPortfolio),
+    };
 
-    if (profits[soldCoin][boughtCoin][valueCoin] !== ((finalValue - initialValue) / initialValue).toFixed(5)) {
-        profits[soldCoin][boughtCoin][valueCoin] = ((finalValue - initialValue) / initialValue).toFixed(5);
+    const percentChanges = {
+        soldCoin: ((finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin).toFixed(5) * 100,
+        boughtCoin: ((finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin).toFixed(5) * 100,
+        valueCoin: ((finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin).toFixed(5) * 100,
+    };
+    const percentChangeSum = percentChanges.soldCoin + percentChanges.boughtCoin + percentChanges.valueCoin;
+
+    if (profits[soldCoin][boughtCoin][valueCoin] !== percentChangeSum) {
+        profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum;
+
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-            `% gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}, `,
+            `% gain: ${percentChanges.soldCoin}, ${percentChanges.boughtCoin}, ${percentChanges.valueCoin}, `,
+            `Sum: ${percentChangeSum}, `,
             `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
             `Ticker calls: ${tickerData.executions}`);
-
-        if ((finalValue - initialValue) / initialValue > 0.005) {
+        if (percentChangeSum > 0) {
             Log.ledger(`\n    Trade found! ${timestamp()}`,
                 `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
-                `\n        Initial value: ${initialValue}`,
+                `\n        Initial value: ${initialValues.valueCoin}`,
                 `\n        Initial portfolio: `, initialPortfolio,
-                `\n        Final value: ${finalValue}`,
+                `\n        Final value: ${finalValues.valueCoin}`,
                 `\n        Final portfolio: `, finalPortfolio,
-                `\n        Final % gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}\n`,
-                `\n       `, status, '\n');
+                `\n        Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin}`,
+                `\n        Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin}`,
+                `\n        Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin}`,
+                `\n        Final % gain total         : ${percentChangeSum}`,
+                `\n\n       `, status, '\n');
         }
     }
 
+    // Check balance of the traded currency is high enough
     if (soldCoin === 'BTC') {
         if (status.BTC.balance < 0.00012) {
             Log.ledger(`\nCan't trade: Not enough BTC (have ${status.BTC.balance})\n`);
@@ -213,7 +233,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
         }
     }
 
-    return (finalValue - initialValue) / initialValue > 0.005;
+    return percentChangeSum > 0;
 };
 
 // Coin specified is the one being sold. The other two are the one being bought, and the one being used to value
