@@ -204,8 +204,7 @@ function wait(delay) {
 
 const initialize = async() => {
     await updateBalances();
-    addTicker(5, true);
-    await wait(1000);
+    await addTicker(5, true);
     await Log.ledger(timestamp(), status, '\n');
     addTicker();
 };
