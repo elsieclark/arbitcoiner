@@ -128,10 +128,12 @@ const handleTicker = (data) => {
 };
 
 async function updateBalances() {
+    console.log('Alpha')
     const newBal = await queue.push({ flags: ['private_util'] }, () => privatePolo.private_util.returnBalances());
     status.BTC.balance = newBal.BTC;
     status.BCH.balance = newBal.BCH;
     status.ETH.balance = newBal.ETH;
+    console.log('Beta')
 }
 
 const appraisePortfolioIn = (targetCoin, portfolio) => {
@@ -232,4 +234,3 @@ const initialize = async() => {
 };
 
 initialize();
-Log.console('Reached EOF');
