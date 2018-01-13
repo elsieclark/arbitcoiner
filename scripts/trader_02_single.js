@@ -174,7 +174,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
                 `\n        Final value: ${finalValue}`,
                 `\n        Final portfolio: `, finalPortfolio,
                 `\n        Final % gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}\n`,
-                status, '\n');
+                `\n       `, status, '\n');
         }
     }
 
