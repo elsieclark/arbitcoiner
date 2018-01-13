@@ -22,6 +22,11 @@ const privatePolo = {
     private_util: new Poloniex(...config.private_util),
 };
 
+const tickerData = {
+    startTime: 0,
+    executions: 0,
+};
+
 
 const queue = new Queue({
     rate: 6,
@@ -31,8 +36,7 @@ queue.addFlag('private_0', { concurrency: 1 });
 queue.addFlag('private_1', { concurrency: 1 });
 queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
-
-let initialized = false;
+queue.addFlag('ticker', { concurrency: 1, interval: 350 });
 
 const COINS = ['BTC', 'ETH', 'BCH'];
 const status = COINS.reduce((acc, val) => {
@@ -53,80 +57,64 @@ const timestamp = () => {
     return time.toString();
 };
 
-const tickerData = {
-    startTime: 0,
-    executions: 0,
-};
 
+// Permanent rolling ticker
+const addTicker = (priority = 5, once = false) => {
+    return queue.push({ flags: ['ticker'], priority: priority }, () => {
+        return poloniex.returnTicker();
+    })
+        .then((result) => {
+            let changed = false;
 
-poloniex.subscribe('ticker');
+            if (status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid) {
+                changed = true;
+                status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid;
+                status.ETH.BTC.lowestAsk = 1/ +result.BTC_ETH.highestBid;
+            }
 
-poloniex.on('message', (channelName, data, seq) => {
-    if (channelName === 'ticker') {
-        handleTicker(data);
-    }
-});
+            if (status.BTC.ETH.lowestAsk = +result.BTC_ETH.lowestAsk) {
+                changed = true;
+                status.BTC.ETH.lowestAsk = +result.BTC_ETH.lowestAsk;
+                status.ETH.BTC.highestBid = 1/ +result.BTC_ETH.lowestAsk;
+            }
 
-poloniex.on('open', () => {
-    console.log(`Poloniex WebSocket connection open`);
-});
+            if (status.BTC.BCH.highestBid = +result.BTC_BCH.highestBid) {
+                changed = true;
+                status.BTC.BCH.highestBid = +result.BTC_BCH.highestBid;
+                status.BCH.BTC.lowestAsk = 1/ +result.BTC_BCH.highestBid;
+            }
 
-poloniex.on('close', (reason, details) => {
-    console.log(`Poloniex WebSocket connection disconnected`, reason, details);
-});
+            if (status.BTC.BCH.lowestAsk = +result.BTC_BCH.lowestAsk) {
+                changed = true;
+                status.BTC.BCH.lowestAsk = +result.BTC_BCH.lowestAsk;
+                status.BCH.BTC.highestBid = 1/ +result.BTC_BCH.lowestAsk;
+            }
 
-poloniex.on('error', (error) => {
-    console.log(`An error has occured`, error);
-});
+            if (status.ETH.BCH.highestBid = +result.ETH_BCH.highestBid) {
+                changed = true;
+                status.ETH.BCH.highestBid = +result.ETH_BCH.highestBid;
+                status.BCH.ETH.lowestAsk = 1/ +result.ETH_BCH.highestBid;
+            }
 
-poloniex.openWebSocket({ version: 2 });
+            if (status.ETH.BCH.lowestAsk = +result.ETH_BCH.lowestAsk) {
+                changed = true;
+                status.ETH.BCH.lowestAsk = +result.ETH_BCH.lowestAsk;
+                status.BCH.ETH.highestBid = 1/ +result.ETH_BCH.lowestAsk;
+            }
 
-
-const handleTicker = (data) => {
-    let changed = false;
-    if (data.currencyPair === 'BTC_ETH') {
-        tickerData.executions++;
-        Log.console(`Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
-            `Ticker calls: ${tickerData.executions}`);
-        if (status.BTC.ETH.highestBid = (+data.highestBid).toFixed(8)) {
-            changed = true;
-            status.BTC.ETH.highestBid = (+data.highestBid).toFixed(8);
-            status.ETH.BTC.lowestAsk = 1/ (+data.highestBid).toFixed(8);
-        }
-
-        if (status.BTC.ETH.lowestAsk = (+data.lowestAsk).toFixed(8)) {
-            changed = true;
-            status.BTC.ETH.lowestAsk = (+data.lowestAsk).toFixed(8);
-            status.ETH.BTC.highestBid = 1/ (+data.lowestAsk).toFixed(8);
-        }
-    } else if (data.currencyPair === 'BTC_BCH') {
-        if (status.BTC.BCH.highestBid = (+data.highestBid).toFixed(8)) {
-            changed = true;
-            status.BTC.BCH.highestBid = (+data.highestBid).toFixed(8);
-            status.BCH.BTC.lowestAsk = 1/ (+data.highestBid).toFixed(8);
-        }
-
-        if (status.BTC.BCH.lowestAsk = (+data.lowestAsk).toFixed(8)) {
-            changed = true;
-            status.BTC.BCH.lowestAsk = (+data.lowestAsk).toFixed(8);
-            status.BCH.BTC.highestBid = 1/ (+data.lowestAsk).toFixed(8);
-        }
-    } else if (data.currencyPair === 'ETH_BCH') {
-        if (status.ETH.BCH.highestBid = (+data.highestBid).toFixed(8)) {
-            changed = true;
-            status.ETH.BCH.highestBid = (+data.highestBid).toFixed(8);
-            status.BCH.ETH.lowestAsk = 1/ (+data.highestBid).toFixed(8);
-        }
-
-        if (status.ETH.BCH.lowestAsk = (+data.lowestAsk).toFixed(8)) {
-            changed = true;
-            status.ETH.BCH.lowestAsk = (+data.lowestAsk).toFixed(8);
-            status.BCH.ETH.highestBid = 1/ (+data.lowestAsk).toFixed(8);
-        }
-    }
-    if (changed && status.BTC.ETH.highestBid && status.BTC.BCH.highestBid && status.ETH.BCH.highestBid && initialized) {
-        emitter.emit('tryTrade');
-    }
+            if (changed) {
+                emitter.emit('tryTrade');
+            }
+        })
+        .catch((err) => {
+            Log.info('Error:', err);
+        })
+        .then(() => {
+            if (!once) {
+                tickerData.executions++;
+                setImmediate(addTicker);
+            }
+        });
 };
 
 async function updateBalances() {
@@ -191,18 +179,22 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
     };
 
     const percentChanges = {
-        soldCoin: ((finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin).toFixed(5) * 100,
-        boughtCoin: ((finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin).toFixed(5) * 100,
-        valueCoin: ((finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin).toFixed(5) * 100,
+        soldCoin: (100 * (finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin),
+        boughtCoin: (100 * (finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin),
+        valueCoin: (100 * (finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin),
     };
     const percentChangeSum = percentChanges.soldCoin + percentChanges.boughtCoin + percentChanges.valueCoin;
 
-    if (profits[soldCoin][boughtCoin][valueCoin] !== percentChangeSum) {
-        profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum;
+    if (profits[soldCoin][boughtCoin][valueCoin] !== percentChangeSum.toFixed(3)) {
+        profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum.toFixed(3);
+
+        if (percentChanges.valueCoin > 0.5) {
+            Log.info('Old trigger reached!');
+        }
 
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-            `% gain: ${percentChanges.soldCoin}, ${percentChanges.boughtCoin}, ${percentChanges.valueCoin}, `,
-            `Sum: ${percentChangeSum}, `,
+            `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin.toFixed(3)}, ${percentChanges.valueCoin.toFixed(3)}, `,
+            `Sum: ${percentChangeSum.toFixed(3)}, `,
             `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
             `Ticker calls: ${tickerData.executions}`);
         if (percentChangeSum > 0) {
@@ -212,10 +204,10 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
                 `\n        Initial portfolio: `, initialPortfolio,
                 `\n        Final value: ${finalValues.valueCoin}`,
                 `\n        Final portfolio: `, finalPortfolio,
-                `\n        Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin}`,
-                `\n        Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin}`,
-                `\n        Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin}`,
-                `\n        Final % gain total         : ${percentChangeSum}`,
+                `\n        Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin.toFixed(3)}`,
+                `\n        Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin.toFixed(3)}`,
+                `\n        Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin.toFixed(3)}`,
+                `\n        Final % gain total         : ${percentChangeSum.toFixed(3)}`,
                 `\n\n       `, status, '\n');
         }
     }
@@ -228,9 +220,9 @@ const tryTradeForCoin = (soldCoin) => {
     const otherCoins = coinListWithExclude(soldCoin);
 
     if (checkProfitability(soldCoin, otherCoins[0], otherCoins[1])) {
-
+        // Make trade
     } else if (checkProfitability(soldCoin, otherCoins[1], otherCoins[0])) {
-
+        // Make trade
     }
 };
 
@@ -247,10 +239,12 @@ function wait(delay) {
 const initialize = async() => {
     Log.console('Initializing');
     await updateBalances();
+    await addTicker(5, true);
     await Log.ledger(timestamp(), status, '\n');
     Log.console('Initialized');
     tickerData.startTime = Date.now();
-    initialized = true;
+    addTicker();
+    addTicker();
 };
 
 initialize();
