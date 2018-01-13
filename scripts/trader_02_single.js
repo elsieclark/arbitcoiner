@@ -198,6 +198,7 @@ emitter.on('tryTrade', () => {
 
 const initialize = async() => {
     await updateBalances();
+    addTicker(5, true);
     await Log.ledger(timestamp(), status, '\n');
     addTicker();
 };
