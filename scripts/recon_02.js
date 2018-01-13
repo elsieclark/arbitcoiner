@@ -32,6 +32,8 @@ queue.addFlag('private_1', { concurrency: 1 });
 queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
 
+let initialized = false;
+
 const COINS = ['BTC', 'ETH', 'BCH'];
 const status = COINS.reduce((acc, val) => {
     acc[val] = {
@@ -56,7 +58,7 @@ poloniex.subscribe('ticker');
 
 poloniex.on('message', (channelName, data, seq) => {
     if (channelName === 'ticker') {
-        console.log(`Ticker:`, data);
+        handleTicker(data);
     }
 });
 
@@ -114,7 +116,7 @@ const handleTicker = (data) => {
             status.BCH.ETH.highestBid = 1/ (+data.lowestAsk).toFixed(8);
         }
     }
-    if (changed && status.BTC.ETH.highestBid && status.BTC.BCH.highestBid && status.ETH.BCH.highestBid) {
+    if (changed && status.BTC.ETH.highestBid && status.BTC.BCH.highestBid && status.ETH.BCH.highestBid && initialized) {
         emitter.emit('tryTrade');
     }
 };
@@ -215,6 +217,7 @@ function wait(delay) {
 const initialize = async() => {
     await updateBalances();
     await Log.ledger(timestamp(), status, '\n');
+    initialized = true;
 };
 
 initialize();
