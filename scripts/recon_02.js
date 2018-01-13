@@ -178,30 +178,6 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
         }
     }
 
-    if (soldCoin === 'BTC') {
-        if (status.BTC.balance < 0.00012) {
-            Log.ledger(`\nCan't trade: Not enough BTC (have ${status.BTC.balance})\n`);
-            return false;
-        }
-    } else if (boughtCoin === 'BTC') {
-        if (status[soldCoin].balance * status.BTC[soldCoin] < 0.00012) {
-            Log.ledger(`\nCan't trade: Not enough ${soldCoin} (have ${status[soldCoin].balance} `,
-                `[worth ${status[soldCoin].balance * status.ETH[soldCoin]} BTC])\n`);
-            return false;
-        }
-    } else if (soldCoin === 'ETH') {
-        if (status.ETH.balance < 0.00012) {
-            Log.ledger(`\nCan't trade: Not enough ETH (have ${status.BTC.balance})\n`);
-            return false;
-        }
-    } else if (boughtCoin === 'ETH') {
-        if (status.BCH.balance * status.ETH.BCH < 0.00012) {
-            Log.ledger(`\nCan't trade: Not enough BCH (have ${status.BCH.balance} `,
-                `[worth ${status.BCH.balance * status.ETH.BCH} ETH])\n`);
-            return false;
-        }
-    }
-
     return (finalValue - initialValue) / initialValue > 0.005;
 };
 
