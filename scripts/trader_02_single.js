@@ -55,8 +55,10 @@ const timestamp = () => {
 
 // Permanent rolling ticker
 const addTicker = (priority = 5, once = false) => {
+    console.log('Alpha', Date.now());
     return queue.push({ flags: ['ticker'], priority: priority }, () => { return poloniex.returnTicker(); })
         .then((result) => {
+            console.log('Beta', Date.now());
             let changed = false;
 
             if (status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid) {
@@ -96,7 +98,7 @@ const addTicker = (priority = 5, once = false) => {
             }
 
             if (changed) {
-                emitter.emit('tryTrade');
+                //emitter.emit('tryTrade');
             }
         })
         .catch((err) => {
@@ -227,14 +229,15 @@ function wait(delay) {
 }
 
 const initialize = async() => {
-    await updateBalances();
+    Log.console('Initializing');
+    //await updateBalances();
     await addTicker(5, true);
-    await Log.ledger(timestamp(), status, '\n');
-    addTicker();
+    //await Log.ledger(timestamp(), status, '\n');
+    //addTicker();
+    Log.console('Init');
 };
 
 initialize();
-Log.console('Reached EOF');
 
 
 
