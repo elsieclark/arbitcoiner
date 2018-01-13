@@ -218,30 +218,30 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
     // Check balance of the traded currency is high enough
     if (soldCoin === 'BTC') {
         if (status.BTC.balance < 0.00012) {
-            Log.info(`${timestamp()} Can't trade: Not enough BTC (have ${status.BTC.balance})`);
+            //Log.info(`${timestamp()} Can't trade: Not enough BTC (have ${status.BTC.balance})`);
             return false;
         }
     } else if (boughtCoin === 'BTC') {
         if (status[soldCoin].balance * status.BTC[soldCoin].highestBid < 0.00012) {
-            Log.info(`${timestamp()} Can't trade: Not enough ${soldCoin} (have ${status[soldCoin].balance}`,
-                `[worth ${status[soldCoin].balance * frozenStatus.ETH[soldCoin].highestBid} BTC])`);
+            //Log.info(`${timestamp()} Can't trade: Not enough ${soldCoin} (have ${status[soldCoin].balance}`,
+            //    `[worth ${status[soldCoin].balance * frozenStatus.ETH[soldCoin].highestBid} BTC])`);
             return false;
         }
     } else if (soldCoin === 'ETH') {
         if (status.ETH.balance < 0.00012) {
-            Log.info(`${timestamp()} Can't trade: Not enough ETH (have ${status.BTC.balance})`);
+            //Log.info(`${timestamp()} Can't trade: Not enough ETH (have ${status.BTC.balance})`);
             return false;
         }
     } else if (boughtCoin === 'ETH') {
         if (status.BCH.balance * status.ETH.BCH.highestBid < 0.00012) {
-            Log.info(`${timestamp()} Can't trade: Not enough BCH (have ${status.BCH.balance}`,
-                `[worth ${status.BCH.balance * frozenStatus.ETH.BCH.highestBid} ETH])`);
+            //Log.info(`${timestamp()} Can't trade: Not enough BCH (have ${status.BCH.balance}`,
+            //    `[worth ${status.BCH.balance * frozenStatus.ETH.BCH.highestBid} ETH])`);
             return false;
         }
     }
 
     if (status[soldCoin].busy) {
-        Log.info(`${timestamp()} Can't make trade: ${soldCoin} is busy`);
+        //Log.info(`${timestamp()} Can't make trade: ${soldCoin} is busy`);
         return false;
     }
 
