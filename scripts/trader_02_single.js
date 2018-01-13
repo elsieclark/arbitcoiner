@@ -245,7 +245,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
         return false;
     }
 
-    return percentChangeSum > 0.25;
+    return percentChangeSum > 0.01;
 };
 
 const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
