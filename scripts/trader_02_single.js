@@ -33,30 +33,18 @@ queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
 queue.addFlag('ticker', { concurrency: 3, interval: 400 });
 
-const CURRENCIES = ['BTC', 'ETH', 'BCH'];
-const status = {
-    BTC: {
-        balance: 0,
-        busy: false,
-        BTC: { lowestAsk: 1, highestBid: 1 },
-        ETH: { lowestAsk: 0, highestBid: 0 },
-        BCH: { lowestAsk: 0, highestBid: 0 },
-    },
-    ETH: {
-        balance: 0,
-        busy: false,
-        BTC: { lowestAsk: 0, highestBid: 0 },
-        ETH: { lowestAsk: 1, highestBid: 1 },
-        BCH: { lowestAsk: 0, highestBid: 0 },
-    },
-    BCH: {
+const COINS = ['BTC', 'ETH', 'BCH'];
+const status = COINS.reduce((acc, val) => {
+    acc[val] = {
         balance: 0,
         busy: false,
         BTC: { lowestAsk: 0, highestBid: 0 },
         ETH: { lowestAsk: 0, highestBid: 0 },
-        BCH: { lowestAsk: 1, highestBid: 1 },
-    },
-};
+        BCH: { lowestAsk: 0, highestBid: 0 },
+    };
+    acc[val][val] = { lowestAsk: 1, highestBid: 1 };
+    return acc;
+}, {});
 
 
 const timestamp = () => {
@@ -67,7 +55,6 @@ const timestamp = () => {
 
 // Permanent rolling ticker
 const addTicker = (priority = 5, once = false) => {
-    console.log('Adding ticker');
     return queue.push({ flags: ['ticker'], priority: priority }, () => { return poloniex.returnTicker(); })
         .then((result) => {
             let changed = false;
@@ -109,7 +96,6 @@ const addTicker = (priority = 5, once = false) => {
             }
 
             if (changed) {
-                //Log.info(Date.now() + ' ' + JSON.stringify(prices));
                 console.log('Changed', typeof status.ETH.BCH.lowestAsk, status);
                 emitter.emit('tryTrade');
             }
@@ -124,21 +110,79 @@ const addTicker = (priority = 5, once = false) => {
         });
 };
 
-const appraisePortfolioIn = (targetCurrency, portfolio) => {
-    return CURRENCIES.reduce((acc, curr) => acc + portfolio[curr] * status[targetCurrency][curr].highestBid, 0);
+async function updateBalances() {
+    const newBal = await queue.push({ flags: ['private_util'] }, () => privatePolo.private_util.returnBalances());
+    status.BTC.balance = newBal.BTC;
+    status.BCH.balance = newBal.BCH;
+    status.ETH.balance = newBal.ETH;
+}
+
+const appraisePortfolioIn = (targetCoin, portfolio) => {
+    return COINS.reduce((acc, coin) => acc + portfolio[coin] * status[targetCoin][coin].highestBid, 0);
 };
 
-const appraiseCurrentPortfolioIn = (targetCurrency) => {
-    return CURRENCIES.reduce((acc, curr) => acc + status[curr].balance * status[targetCurrency][curr].highestBid, 0);
+const coinListWithExclude = (coin) => {
+    return COINS.reduce((acc, val) => {
+        if (coin !== val) {
+            acc.push(val);
+        }
+        return acc;
+    }, []);
 };
 
+const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
+    const initialPortfolio = {};
+    initialPortfolio[soldCoin] = status[soldCoin].balance;
+    initialPortfolio[boughtCoin] = 0;
+    initialPortfolio[valueCoin] = 0;
 
+    const initialValue = appraisePortfolioIn(valueCoin, initialPortfolio);
 
+    const finalPortfolio = {};
+    finalPortfolio[soldCoin] = 0;
+    finalPortfolio[boughtCoin] = initialPortfolio[soldCoin] * status[boughtCoin][soldCoin].highestBid * 0.9975;
+    finalPortfolio[valueCoin] = 0;
 
+    const finalValue = appraisePortfolioIn(valueCoin, finalPortfolio);
 
+    Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
+        `% gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}`);
 
-addTicker();
-console.log('Reached EOF');
+    if ((finalValue - initialValue) / initialValue > 0.005) {
+        Log.ledger(`\n    Trade found! ${timestamp()}`,
+            `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
+            `\n        Initial value: ${initialValue}`,
+            `\n        Initial portfolio: `, initialPortfolio,
+            `\n        Final value: ${finalValue}`,
+            `\n        Final portfolio: `, finalPortfolio,
+            `\n        Final % gain: ${((finalValue - initialValue) / initialValue).toFixed(5)}\n`);
+    }
+    return (finalValue - initialValue) / initialValue > 0.005;
+};
+
+// Coin specified is the one being sold. The other two are the one being bought, and the one being used to value
+const tryTradeForCoin = (soldCoin) => {
+    const otherCoins = coinListWithExclude(soldCoin);
+
+    if (checkProfitability(soldCoin, otherCoins[0], otherCoins[1])) {
+
+    } else if (checkProfitability(soldCoin, otherCoins[1], otherCoins[0])) {
+
+    }
+};
+
+emitter.on('tryTrade', () => {
+    COINS.forEach(tryTradeForCoin);
+});
+
+const initialize = async() => {
+    await updateBalances();
+    await Log.ledger(timestamp(), status, '\n');
+    addTicker();
+};
+
+initialize();
+Log.console('Reached EOF');
 
 
 
