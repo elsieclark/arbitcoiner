@@ -105,7 +105,7 @@ const addTicker = (priority = 5, once = false) => {
                 status.BCH.ETH.highestBid = 1/ +result.ETH_BCH.lowestAsk;
             }
 
-            if (changed) {
+            if (changed && !once) {
                 emitter.emit('tryTrade');
             }
         })
@@ -248,7 +248,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
     return percentChangeSum > 0.25;
 };
 
-const makeTrade = (soldCoin, boughtCoin, frozenStatus) => {
+const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
     const rate = frozenStatus[soldCoin][boughtCoin].lowestAsk;
     status[soldCoin].busy = true;
     const polo = privatePolo[soldCoin];
@@ -263,12 +263,12 @@ const makeTrade = (soldCoin, boughtCoin, frozenStatus) => {
     Log.info('Gamma2', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus[soldCoin].balance);
     Log.info('Delta2', typeof `${boughtCoin}_${soldCoin}`, typeof (1/rate), typeof frozenStatus[soldCoin].balance);
 
-    return queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
-        Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`, polo, polo.sell);
+    return await queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
+        Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`, polo, polo.sell, polo.sell(), 'end');
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
-            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, 0.997*frozenStatus[soldCoin].balance/rate, false, true, false);
+            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, 0.997*frozenStatus[soldCoin].balance/rate, false, false, false);
         } else {
-            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, 0.997*frozenStatus[soldCoin].balance, false, true, false);
+            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, 0.997*frozenStatus[soldCoin].balance, false, false, false);
         }
     });
 };
