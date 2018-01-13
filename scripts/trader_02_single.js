@@ -188,6 +188,10 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin) => {
     if (profits[soldCoin][boughtCoin][valueCoin] !== percentChangeSum.toFixed(3)) {
         profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum.toFixed(3);
 
+        if (percentChanges.valueCoin > 0.5) {
+            Log.info('Old trigger reached!');
+        }
+
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
             `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin.toFixed(3)}, ${percentChanges.valueCoin.toFixed(3)}, `,
             `Sum: ${percentChangeSum.toFixed(3)}, `,
