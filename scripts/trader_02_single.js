@@ -200,7 +200,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
             `Sum: ${percentChangeSum.toFixed(3)}, `,
             `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
             `Ticker calls: ${tickerData.executions}`);
-        if (percentChangeSum > 0.20) {
+        if (percentChangeSum > 0.2) {
             Log.info(`\n    Trade found! ${timestamp()}`,
                 `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
                 `\n        Initial value: ${initialValues.valueCoin}`,
@@ -260,9 +260,6 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
         `\n        Projected final amount: ${frozenStatus[boughtCoin].balance + (0.9975 * frozenStatus[soldCoin].balance / rate)}`,
         `\n\n       `, frozenStatus, '\n');
 
-    Log.info('Gamma2', `${boughtCoin}_${soldCoin}`, 1/rate, frozenStatus[soldCoin].balance);
-    Log.info('Delta2', typeof `${boughtCoin}_${soldCoin}`, typeof (1/rate), typeof frozenStatus[soldCoin].balance);
-
     return await queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
         Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`, polo, polo.sell, polo.sell(), 'end');
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
@@ -291,7 +288,7 @@ const tryTradeForCoin = async(soldCoin) => {
         return;
     }
     const valueCoin = COINS.reduce((acc, val) => {
-        return (val === soldCoin || val == boughtCoin) ? acc : val;
+        return (val === soldCoin || val === boughtCoin) ? acc : val;
     }, '');
 
     try {
@@ -345,11 +342,14 @@ const tryTradeForCoin = async(soldCoin) => {
             await Log.ledger(`\nExecuted trade #${tradeCount}. Quitting.`);
             process.exit(1);
         }
-        status[soldCoin].busy = false;
+
     } catch (err) {
         await Log.info('Order placement failed', err);
-        process.exit(1);
+        if (err.code !== 'ESOCKETTIMEDOUT') {
+            process.exit(1);
+        }
     }
+    status[soldCoin].busy = false;
 };
 
 emitter.on('tryTrade', () => {
