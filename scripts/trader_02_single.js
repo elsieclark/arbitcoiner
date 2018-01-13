@@ -197,7 +197,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
             `Sum: ${percentChangeSum.toFixed(3)}, `,
             `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
             `Ticker calls: ${tickerData.executions}`);
-        if (percentChangeSum > 0) {
+        if (percentChangeSum > 0.25) {
             Log.info(`\n    Trade found! ${timestamp()}`,
                 `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
                 `\n        Initial value: ${initialValues.valueCoin}`,
@@ -242,7 +242,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
         return false;
     }
 
-    return percentChangeSum > 0.25;
+    return percentChangeSum > 0.1;
 };
 
 const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
