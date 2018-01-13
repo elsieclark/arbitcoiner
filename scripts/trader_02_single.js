@@ -55,15 +55,12 @@ const timestamp = () => {
 
 // Permanent rolling ticker
 const addTicker = (priority = 5, once = false) => {
-    Log.console('Ticker pushed')
     let execStart
     return queue.push({ flags: ['ticker'], priority: priority }, () => {
-        Log.console('Ticker Executed')
         execStart = Date.now();
         return poloniex.returnTicker();
     })
         .then((result) => {
-            Log.console('Ticker Completed', Date.now() - execStart)
             let changed = false;
 
             if (status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid) {
@@ -236,17 +233,11 @@ function wait(delay) {
 const initialize = async() => {
     Log.console('Initializing');
     await updateBalances();
-    Log.console('Alpha');
     await addTicker(5, true);
-    Log.console('Beta');
     await Log.ledger(timestamp(), status, '\n');
     Log.console('Initialized');
     addTicker();
     addTicker();
 };
-
-setInterval(() => {
-    Log.console('Queue', queue.getLength('ticker'), queue.getConcurrent('ticker'));
-}, 1000);
 
 initialize();
