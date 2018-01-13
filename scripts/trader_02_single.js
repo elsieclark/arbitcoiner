@@ -210,9 +210,9 @@ const tryTradeForCoin = (soldCoin) => {
     const otherCoins = coinListWithExclude(soldCoin);
 
     if (checkProfitability(soldCoin, otherCoins[0], otherCoins[1])) {
-
+        // Make trade
     } else if (checkProfitability(soldCoin, otherCoins[1], otherCoins[0])) {
-
+        // Make trade
     }
 };
 

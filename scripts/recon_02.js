@@ -31,7 +31,6 @@ queue.addFlag('private_0', { concurrency: 1 });
 queue.addFlag('private_1', { concurrency: 1 });
 queue.addFlag('private_2', { concurrency: 1 });
 queue.addFlag('private_util', { concurrency: 1 });
-queue.addFlag('ticker', { concurrency: 3, interval: 400 });
 
 const COINS = ['BTC', 'ETH', 'BCH'];
 const status = COINS.reduce((acc, val) => {
@@ -53,60 +52,71 @@ const timestamp = () => {
 };
 
 
-// Permanent rolling ticker
-const addTicker = (priority = 5, once = false) => {
-    return queue.push({ flags: ['ticker'], priority: priority }, () => { return poloniex.returnTicker(); })
-        .then((result) => {
-            let changed = false;
+poloniex.subscribe('ticker');
 
-            if (status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid) {
-                changed = true;
-                status.BTC.ETH.highestBid = +result.BTC_ETH.highestBid;
-                status.ETH.BTC.lowestAsk = 1/ +result.BTC_ETH.highestBid;
-            }
+poloniex.on('message', (channelName, data, seq) => {
+    if (channelName === 'ticker') {
+        console.log(`Ticker:`, data);
+    }
+});
 
-            if (status.BTC.ETH.lowestAsk = +result.BTC_ETH.lowestAsk) {
-                changed = true;
-                status.BTC.ETH.lowestAsk = +result.BTC_ETH.lowestAsk;
-                status.ETH.BTC.highestBid = 1/ +result.BTC_ETH.lowestAsk;
-            }
+poloniex.on('open', () => {
+    console.log(`Poloniex WebSocket connection open`);
+});
 
-            if (status.BTC.BCH.highestBid = +result.BTC_BCH.highestBid) {
-                changed = true;
-                status.BTC.BCH.highestBid = +result.BTC_BCH.highestBid;
-                status.BCH.BTC.lowestAsk = 1/ +result.BTC_BCH.highestBid;
-            }
+poloniex.on('close', (reason, details) => {
+    console.log(`Poloniex WebSocket connection disconnected`);
+});
 
-            if (status.BTC.BCH.lowestAsk = +result.BTC_BCH.lowestAsk) {
-                changed = true;
-                status.BTC.BCH.lowestAsk = +result.BTC_BCH.lowestAsk;
-                status.BCH.BTC.highestBid = 1/ +result.BTC_BCH.lowestAsk;
-            }
+poloniex.on('error', (error) => {
+    console.log(`An error has occured`);
+});
 
-            if (status.ETH.BCH.highestBid = +result.ETH_BCH.highestBid) {
-                changed = true;
-                status.ETH.BCH.highestBid = +result.ETH_BCH.highestBid;
-                status.BCH.ETH.lowestAsk = 1/ +result.ETH_BCH.highestBid;
-            }
+poloniex.openWebSocket({ version: 2 });
 
-            if (status.ETH.BCH.lowestAsk = +result.ETH_BCH.lowestAsk) {
-                changed = true;
-                status.ETH.BCH.lowestAsk = +result.ETH_BCH.lowestAsk;
-                status.BCH.ETH.highestBid = 1/ +result.ETH_BCH.lowestAsk;
-            }
 
-            if (changed) {
-                emitter.emit('tryTrade');
-            }
-        })
-        .catch((err) => {
-            Log.info('Error:', err);
-        })
-        .then(() => {
-            if (!once) {
-                setImmediate(addTicker);
-            }
-        });
+const handleTicker = (data) => {
+    let changed = false;
+    if (data.currencyPair === 'BTC_ETH') {
+        if (status.BTC.ETH.highestBid = (+data.highestBid).toFixed(8)) {
+            changed = true;
+            status.BTC.ETH.highestBid = (+data.highestBid).toFixed(8);
+            status.ETH.BTC.lowestAsk = 1/ (+data.highestBid).toFixed(8);
+        }
+
+        if (status.BTC.ETH.lowestAsk = (+data.lowestAsk).toFixed(8)) {
+            changed = true;
+            status.BTC.ETH.lowestAsk = (+data.lowestAsk).toFixed(8);
+            status.ETH.BTC.highestBid = 1/ (+data.lowestAsk).toFixed(8);
+        }
+    } else if (data.currencyPair === 'BTC_BCH') {
+        if (status.BTC.BCH.highestBid = (+data.highestBid).toFixed(8)) {
+            changed = true;
+            status.BTC.BCH.highestBid = (+data.highestBid).toFixed(8);
+            status.BCH.BTC.lowestAsk = 1/ (+data.highestBid).toFixed(8);
+        }
+
+        if (status.BTC.BCH.lowestAsk = (+data.lowestAsk).toFixed(8)) {
+            changed = true;
+            status.BTC.BCH.lowestAsk = (+data.lowestAsk).toFixed(8);
+            status.BCH.BTC.highestBid = 1/ (+data.lowestAsk).toFixed(8);
+        }
+    } else if (data.currencyPair === 'ETH_BCH') {
+        if (status.ETH.BCH.highestBid = (+data.highestBid).toFixed(8)) {
+            changed = true;
+            status.ETH.BCH.highestBid = (+data.highestBid).toFixed(8);
+            status.BCH.ETH.lowestAsk = 1/ (+data.highestBid).toFixed(8);
+        }
+
+        if (status.ETH.BCH.lowestAsk = (+data.lowestAsk).toFixed(8)) {
+            changed = true;
+            status.ETH.BCH.lowestAsk = (+data.lowestAsk).toFixed(8);
+            status.BCH.ETH.highestBid = 1/ (+data.lowestAsk).toFixed(8);
+        }
+    }
+    if (changed && status.BTC.ETH.highestBid && status.BTC.BCH.highestBid && status.ETH.BCH.highestBid) {
+        emitter.emit('tryTrade');
+    }
 };
 
 async function updateBalances() {
@@ -204,9 +214,7 @@ function wait(delay) {
 
 const initialize = async() => {
     await updateBalances();
-    await addTicker(5, true);
     await Log.ledger(timestamp(), status, '\n');
-    addTicker();
 };
 
 initialize();
