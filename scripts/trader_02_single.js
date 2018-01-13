@@ -119,9 +119,9 @@ const addTicker = (priority = 5, once = false) => {
 
 async function updateBalances() {
     const newBal = await queue.push({ flags: ['private_util'] }, () => privatePolo.private_util.returnBalances());
-    status.BTC.balance = newBal.BTC;
-    status.BCH.balance = newBal.BCH;
-    status.ETH.balance = newBal.ETH;
+    status.BTC.balance = +newBal.BTC;
+    status.BCH.balance = +newBal.BCH;
+    status.ETH.balance = +newBal.ETH;
 }
 
 const appraisePortfolioIn = (targetCoin, portfolio) => {
@@ -258,7 +258,7 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
         `\n\n       `, frozenStatus, '\n');
 
     return await queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
-        Log.info(`Actually executing ${soldCoin} ->  ${boughtCoin} trade`);
+        Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`);
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
             return polo.buy(`${soldCoin}_${boughtCoin}`, rate, frozenStatus.soldCoin.balance/rate, false, true, false);
         } else {
