@@ -190,7 +190,7 @@ const formatPercent = (input) => {
 
 const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => {
     console.log('Delta')
-    return Log.info(timestamp(),
+    Log.info(timestamp(),
         `Sell: ${soldCoin}, Buy: ${boughtCoin}, Value: ${valueCoin}`,
         `% gains:`,
         `${formatPercent(percentChanges.soldCoin)},`,
