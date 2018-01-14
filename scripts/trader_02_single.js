@@ -350,6 +350,7 @@ const tryTradeForCoin = async(soldCoin) => {
         }
     }
     status[soldCoin].busy = false;
+    emitter.emit('tryTrade');
 };
 
 emitter.on('tryTrade', () => {
