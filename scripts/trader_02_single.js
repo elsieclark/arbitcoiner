@@ -196,9 +196,11 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
         }
 
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-            `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin.toFixed(3)}, ${percentChanges.valueCoin.toFixed(3)}, `,
+            `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin.toFixed(3)}, ${percentChanges.valueCoin.toFixed(3)},`,
             `Sum: ${percentChangeSum.toFixed(3)}, `,
-            `Trades: ${tradeCount}`);
+            `Trades: ${tradeCount},`,
+            `Balances: { BTC: ${status.BTC.balance.toFixed(8)}, ETH: ${status.ETH.balance.toFixed(8)}, BCH: ${status.BCH.balance.toFixed(8)}`);
+
         if (percentChangeSum > 0.2) {
             Log.info(`\n    Trade found! ${timestamp()}`,
                 `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
