@@ -190,12 +190,7 @@ const formatPercent = (input) => {
 
 const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => {
     console.log('Delta')
-    Log.info(timestamp(),
-        `Sell: ${soldCoin}, Buy: ${boughtCoin}, Value: ${valueCoin}`,
-        `% gains:`,
-        `${formatPercent(percentChanges.soldCoin)},`,
-        `${formatPercent(percentChanges.boughtCoin)},`,
-        `${formatPercent(percentChanges.valueCoin)},`);
+    Log.info(timestamp());
 };
 
 const printTradeMessage = ({ percentChanges, soldCoin, boughtCoin, valueCoin, initialValues, initialPortfolio,
