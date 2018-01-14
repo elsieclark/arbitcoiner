@@ -127,7 +127,15 @@ async function updateBalances() {
     status.ETH.balance = +newBal.ETH;
 }
 
-const appraisePortfolioIn = (targetCoin, portfolio) => {
+const appraisePortfolioIn = (targetCoin, targetPortfolio) => {
+    let portfolio = targetPortfolio;
+    if (!targetPortfolio) {
+        portfolio = {
+            BTC: status.BTC.balance,
+            ETH: status.ETH.balance,
+            BCH: status.BCH.balance,
+        };
+    }
     return COINS.reduce((acc, coin) => acc + portfolio[coin] * status[targetCoin][coin].highestBid, 0);
 };
 
@@ -158,100 +166,93 @@ const profits = {
     },
 };
 
-const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
-    const initialPortfolio = {};
-    initialPortfolio[soldCoin] = frozenStatus[soldCoin].balance;
-    initialPortfolio[boughtCoin] = 0;
-    initialPortfolio[valueCoin] = 0;
-
-    const initialValues = {
-        soldCoin: appraisePortfolioIn(soldCoin, initialPortfolio),
-        boughtCoin: appraisePortfolioIn(boughtCoin, initialPortfolio),
-        valueCoin: appraisePortfolioIn(valueCoin, initialPortfolio),
+const createValueList = (portfolio, soldCoin, boughtCoin, valueCoin) => {
+    return {
+        soldCoin: appraisePortfolioIn(soldCoin, portfolio),
+        boughtCoin: appraisePortfolioIn(boughtCoin, portfolio),
+        valueCoin: appraisePortfolioIn(valueCoin, portfolio),
     };
-
-    const finalPortfolio = {};
-    finalPortfolio[soldCoin] = 0;
-    finalPortfolio[boughtCoin] = initialPortfolio[soldCoin] * frozenStatus[boughtCoin][soldCoin].highestBid * 0.9975;
-    finalPortfolio[valueCoin] = 0;
-
-    const finalValues = {
-        soldCoin: appraisePortfolioIn(soldCoin, finalPortfolio),
-        boughtCoin: appraisePortfolioIn(boughtCoin, finalPortfolio),
-        valueCoin: appraisePortfolioIn(valueCoin, finalPortfolio),
-    };
-
-    const percentChanges = {
-        soldCoin: (100 * (finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin),
-        boughtCoin: (100 * (finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin),
-        valueCoin: (100 * (finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin),
-    };
-    const percentChangeSum = percentChanges.soldCoin + percentChanges.boughtCoin + percentChanges.valueCoin;
-
-    if (profits[soldCoin][boughtCoin][valueCoin] !== percentChangeSum.toFixed(3)) {
-        profits[soldCoin][boughtCoin][valueCoin] = percentChangeSum.toFixed(3);
-
-        if (percentChanges.valueCoin > 0.5) {
-            Log.info('Old trigger reached!');
-        }
-
-        Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
-            `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin.toFixed(3)}, ${percentChanges.valueCoin.toFixed(3)},`,
-            `Sum: ${percentChangeSum.toFixed(3)}, `,
-            `Trades: ${tradeCount},`,
-            `Balances: { BTC: ${status.BTC.balance.toFixed(8)}, ETH: ${status.ETH.balance.toFixed(8)}, BCH: ${status.BCH.balance.toFixed(8)}`);
-
-        if (percentChangeSum > 0.2) {
-            Log.info(`\n    Trade found! ${timestamp()}`,
-                `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
-                `\n        Initial value: ${initialValues.valueCoin}`,
-                `\n        Initial portfolio: `, initialPortfolio,
-                `\n        Final value: ${finalValues.valueCoin}`,
-                `\n        Final portfolio: `, finalPortfolio,
-                `\n        Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin.toFixed(3)}`,
-                `\n        Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin.toFixed(3)}`,
-                `\n        Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin.toFixed(3)}`,
-                `\n        Final % gain total         : ${percentChangeSum.toFixed(3)}`,
-                `\n\n       `, frozenStatus, '\n');
-        }
-    }
-
-    // Check balance of the traded currency is high enough
-    if (soldCoin === 'BTC') {
-        if (status.BTC.balance < 0.00012) {
-            //Log.info(`${timestamp()} Can't trade: Not enough BTC (have ${status.BTC.balance})`);
-            return false;
-        }
-    } else if (boughtCoin === 'BTC') {
-        if (status[soldCoin].balance * status.BTC[soldCoin].highestBid < 0.00012) {
-            //Log.info(`${timestamp()} Can't trade: Not enough ${soldCoin} (have ${status[soldCoin].balance}`,
-            //    `[worth ${status[soldCoin].balance * frozenStatus.ETH[soldCoin].highestBid} BTC])`);
-            return false;
-        }
-    } else if (soldCoin === 'ETH') {
-        if (status.ETH.balance < 0.00012) {
-            //Log.info(`${timestamp()} Can't trade: Not enough ETH (have ${status.BTC.balance})`);
-            return false;
-        }
-    } else if (boughtCoin === 'ETH') {
-        if (status.BCH.balance * status.ETH.BCH.highestBid < 0.00012) {
-            //Log.info(`${timestamp()} Can't trade: Not enough BCH (have ${status.BCH.balance}`,
-            //    `[worth ${status.BCH.balance * frozenStatus.ETH.BCH.highestBid} ETH])`);
-            return false;
-        }
-    }
-
-    if (status[soldCoin].busy) {
-        //Log.info(`${timestamp()} Can't make trade: ${soldCoin} is busy`);
-        return false;
-    }
-
-    return percentChangeSum > 0.2;
 };
 
-const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
+const createPercentChangeList = (listA, listB) => {
+    const changes = {
+        soldCoin: 100 * (listB.soldCoin - listA.soldCoin) / listA.soldCoin,
+        boughtCoin: 100 * (listB.boughtCoin - listA.boughtCoin) / listA.boughtCoin,
+        valueCoin: 100 * (listB.valueCoin - listA.valueCoin) / listA.valueCoin,
+    };
+    changes.sum = changes.soldCoin + changes.boughtCoin + changes.valueCoin;
+    return changes;
+};
+
+const formatPercent = (input) => {
+    return `    ${input.toFixed(3)}`.slice(-6);
+};
+
+const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => {
+    return Log.info(timestamp(),
+        `Sell: ${soldCoin}, Buy: ${boughtCoin}, Value: ${valueCoin}`,
+        `% gains:`,
+        `${formatPercent(percentChanges.soldCoin)},`,
+        `${formatPercent(percentChanges.boughtCoin)},`,
+        `${formatPercent(percentChanges.valueCoin)},`,
+        `Sum: ${formatPercent(percentChanges.sum)},`,
+        `Trades: ${tradeCount}`,
+        `Balances:`,
+        `{ BTC: ${status.BTC.balance.toFixed(8)},`,
+        `ETH: ${status.ETH.balance.toFixed(8)},`,
+        `BCH: ${status.BCH.balance.toFixed(8)} }`);
+};
+
+const printTradeMessage = ({ percentChanges, soldCoin, boughtCoin, valueCoin, initialValues, initialPortfolio,
+                               finalValues, finalPortfolio, statusSnapshot, msg,  printType = 'info' }) => {
+    return Log[printType](`\n${msg}: ${timestamp()}`,
+        `\n    Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
+        `\n    Initial value: ${initialValues.valueCoin}`,
+        `\n    Initial portfolio: `, initialPortfolio,
+        `\n    Final value:   ${finalValues.valueCoin}`,
+        `\n    Final portfolio:   `, finalPortfolio,
+        `\n    Final % gain soldCoin   ${soldCoin}: ${formatPercent(percentChanges.soldCoin)}`,
+        `\n    Final % gain boughtCoin ${boughtCoin}: ${formatPercent(percentChanges.boughtCoin)}`,
+        `\n    Final % gain valueCoin  ${valueCoin}: ${formatPercent(percentChanges.valueCoin)}`,
+        `\n    Final % gain total         : ${formatPercent(percentChanges.sum)}`,
+        `\n\n   `, statusSnapshot, '\n');
+
+};
+
+const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
+    const initialPortfolio = { BTC: 0, ETH: 0, BCH: 0 };
+    initialPortfolio[soldCoin] = frozenStatus[soldCoin].balance;
+    const initialValues = createValueList(initialPortfolio, soldCoin, boughtCoin, valueCoin);
+
+    const finalPortfolio = { BTC: 0, ETH: 0, BCH: 0 };
+    finalPortfolio[boughtCoin] = initialPortfolio[soldCoin] * frozenStatus[boughtCoin][soldCoin].highestBid * 0.9975;
+    const finalValues = createValueList(finalPortfolio, soldCoin, boughtCoin, valueCoin);
+
+    const percentChanges = createPercentChangeList(initialValues, finalValues);
+
+    // A new value has been calculated
+    if (profits[soldCoin][boughtCoin][valueCoin] !== percentChanges.sum.toFixed(3)) {
+        profits[soldCoin][boughtCoin][valueCoin] = percentChanges.sum.toFixed(3);
+
+        printUpdateMessage();
+
+        if (percentChanges.sum > 0) {
+            printTradeMessage({
+                percentChanges,
+                soldCoin, boughtCoin, valueCoin,
+                initialValues, initialPortfolio,
+                finalValues, finalPortfolio,
+                statusSnapshot: frozenStatus, msg: 'Trade found', printType: 'info',
+            });
+        }
+    }
+
+    return percentChanges.sum;
+};
+
+const makeTrade = async(soldCoin, boughtCoin, frozenStatus, rawFraction) => {
+    const fraction = rawFraction * 0.99999;
     const rate = frozenStatus[soldCoin][boughtCoin].lowestAsk;
-    status[soldCoin].busy = true;
     const polo = privatePolo[soldCoin];
 
     return queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
@@ -264,80 +265,80 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
             `\n\n   `, frozenStatus);
 
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
-            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, 0.99999*frozenStatus[soldCoin].balance/rate, 0, 1, 0);
+            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, fraction * frozenStatus[soldCoin].balance/rate, 0, 1, 0);
         } else {
-            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, 0.99999*frozenStatus[soldCoin].balance, 0, 1, 0);
+            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, fraction * frozenStatus[soldCoin].balance, 0, 1, 0);
         }
     });
 };
 
+const isEnoughToTrade = (soldCoin, boughtCoin, frozenStatus, fraction) => {
+    // Check balance of the traded currency is high enough
+    if (soldCoin === 'BTC') {
+        if (frozenStatus.BTC.balance * fraction < 0.00012) {
+            return false;
+        }
+    } else if (boughtCoin === 'BTC') {
+        if (frozenStatus[soldCoin].balance * fraction * frozenStatus.BTC[soldCoin].highestBid < 0.00012) {
+            return false;
+        }
+    } else if (soldCoin === 'ETH') {
+        if (frozenStatus.ETH.balance * fraction < 0.00012) {
+            return false;
+        }
+    } else if (boughtCoin === 'ETH') {
+        if (frozenStatus.BCH.balance * fraction * frozenStatus.ETH.BCH.highestBid < 0.00012) {
+            return false;
+        }
+    }
+    return true
+};
+
 let tradeCount = 0;
 
-// Coin specified is the one being sold. The other two are the one being bought, and the one being used to value
-const tryTradeForCoin = async(soldCoin) => {
-    const otherCoins = coinListWithExclude(soldCoin);
-    const frozenStatus = JSON.parse(JSON.stringify(status));
-    let boughtCoin = '';
-
-    if (checkProfitability(soldCoin, otherCoins[0], otherCoins[1], frozenStatus)) {
-        boughtCoin = otherCoins[0]
-    } else if (checkProfitability(soldCoin, otherCoins[1], otherCoins[0], frozenStatus)) {
-        boughtCoin = otherCoins[1]
-    }
-
-    if (!boughtCoin) {
-        return;
-    }
+const commitToTrade = async (soldCoin, boughtCoin, frozenStatus, fraction = 1) => {
     const valueCoin = COINS.reduce((acc, val) => {
         return (val === soldCoin || val === boughtCoin) ? acc : val;
     }, '');
 
+    // Check if balance is high enough
+    if (!isEnoughToTrade(soldCoin, boughtCoin, frozenStatus, fraction)) {
+        return;
+    }
+
+    if (status[soldCoin].busy) {
+        return;
+    }
+
     try {
-        const tradeResult = await makeTrade(soldCoin, boughtCoin, frozenStatus);
+        status[soldCoin].busy = true;
+        const tradeResult = await makeTrade(soldCoin, boughtCoin, frozenStatus, fraction);
         await Log.ledger(`\n${timestamp()}    Trade #${tradeCount} Executed:`, tradeResult);
         await updateBalances();
         await Log.ledger(`\n${timestamp()}    Balances Updated:`);
 
-        const initialPortfolio = {};
-        initialPortfolio[soldCoin] = frozenStatus[soldCoin].balance;
-        initialPortfolio[boughtCoin] = frozenStatus[boughtCoin].balance;
-        initialPortfolio[valueCoin] = frozenStatus[valueCoin].balance;
-
-        const initialValues = {
-            soldCoin: appraisePortfolioIn(soldCoin, initialPortfolio),
-            boughtCoin: appraisePortfolioIn(boughtCoin, initialPortfolio),
-            valueCoin: appraisePortfolioIn(valueCoin, initialPortfolio),
+        const initialPortfolio = {
+            BTC: frozenStatus.BTC.balance,
+            ETH: frozenStatus.ETH.balance,
+            BCH: frozenStatus.BCH.balance,
+        };
+        const finalPortfolio = {
+            BTC: status.BTC.balance,
+            ETH: status.ETH.balance,
+            BCH: status.BCH.balance,
         };
 
-        const finalPortfolio = {};
-        finalPortfolio[soldCoin] = status[soldCoin].balance;
-        finalPortfolio[boughtCoin] = status[boughtCoin].balance;
-        finalPortfolio[valueCoin] = status[valueCoin].balance;
+        const initialValues = createValueList(initialPortfolio, soldCoin, boughtCoin, valueCoin);
+        const finalValues = createValueList(finalPortfolio, soldCoin, boughtCoin, valueCoin);
+        const percentChanges = createPercentChangeList(initialValues, finalValues);
 
-        const finalValues = {
-            soldCoin: appraisePortfolioIn(soldCoin, finalPortfolio),
-            boughtCoin: appraisePortfolioIn(boughtCoin, finalPortfolio),
-            valueCoin: appraisePortfolioIn(valueCoin, finalPortfolio),
-        };
-
-        const percentChanges = {
-            soldCoin: (100 * (finalValues.soldCoin - initialValues.soldCoin) / initialValues.soldCoin),
-            boughtCoin: (100 * (finalValues.boughtCoin - initialValues.boughtCoin) / initialValues.boughtCoin),
-            valueCoin: (100 * (finalValues.valueCoin - initialValues.valueCoin) / initialValues.valueCoin),
-        };
-        const percentChangeSum = percentChanges.soldCoin + percentChanges.boughtCoin + percentChanges.valueCoin;
-
-        await Log.ledger(`\nTrade completed: ${timestamp()}`,
-            `\n    Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
-            `\n    Initial value: ${initialValues.valueCoin}`,
-            `\n    Initial portfolio: `, initialPortfolio,
-            `\n    Final value:   ${finalValues.valueCoin}`,
-            `\n    Final portfolio:   `, finalPortfolio,
-            `\n    Final % gain soldCoin   ${soldCoin}: ${percentChanges.soldCoin.toFixed(3)}`,
-            `\n    Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin.toFixed(3)}`,
-            `\n    Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin.toFixed(3)}`,
-            `\n    Final % gain total         : ${percentChangeSum.toFixed(3)}`,
-            `\n\n   `, status, '\n\n');
+        await printTradeMessage({
+            percentChanges,
+            soldCoin, boughtCoin, valueCoin,
+            initialValues, initialPortfolio,
+            finalValues, finalPortfolio,
+            statusSnapshot: status, msg: 'Trade completed', printType: 'ledger',
+        });
 
         tradeCount++;
         if (tradeCount > 6) {
@@ -353,6 +354,34 @@ const tryTradeForCoin = async(soldCoin) => {
     }
     status[soldCoin].busy = false;
     emitter.emit('tryTrade');
+};
+
+// Coin specified is the one being sold. The other two are the one being bought, and the one being used to value
+const tryTradeForCoin = async(soldCoin) => {
+    const otherCoins = coinListWithExclude(soldCoin);
+    const frozenStatus = JSON.parse(JSON.stringify(status));
+    let boughtCoin = '';
+
+    const profitability = [
+        checkProfitability(soldCoin, otherCoins[0], otherCoins[1], frozenStatus),
+        checkProfitability(soldCoin, otherCoins[1], otherCoins[0], frozenStatus),
+    ];
+
+    profitability.forEach((val, i) => {
+        if (val > 0.2) {
+            boughtCoin = otherCoins[i];
+            return commitToTrade(soldCoin, otherCoins[1], frozenStatus, 1);
+        } else if (val > 0.02) {
+            const totalValue = appraisePortfolioIn(soldCoin);
+            const soldCoinFraction = status[soldCoin].balance / totalValue;
+            const boughtCoinFraction = status[otherCoins[i]].balance *
+                status[soldCoin][otherCoins[i]].highestBid / totalValue;
+            if (soldCoinFraction > 0.6 && boughtCoinFraction < 0.2) {
+                const fractionToTrade = soldCoinFraction - boughtCoinFraction / 2;
+                return commitToTrade(soldCoin, otherCoins[1], frozenStatus, fractionToTrade);
+            }
+        }
+    });
 };
 
 emitter.on('tryTrade', () => {
