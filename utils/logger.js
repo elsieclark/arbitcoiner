@@ -1,6 +1,9 @@
 "use strict";
-const fs   = require('fs');
-const path = require('path');
+const fs       = require('fs');
+const Queue    = require('superqueue');
+
+const queueInfo = new Queue();
+const queueLedger = new Queue();
 
 const format = (...args) => {
     return args.map((arg) => {
@@ -67,9 +70,9 @@ module.exports = (name, ledgerDir, infoDir) => {
         ledger: async(...args) => {
             const output = format(...args);
             console.log(output);
-            return writeToFile(infoDir, name, output)
+            return queueInfo.push(() => { return writeToFile(infoDir, name, output); })
                 .then(() => {
-                    writeToFile(ledgerDir, name, output);
+                    return queueInfo.push(() => { return writeToFile(ledgerDir, name, output); });
                 });
         },
 
@@ -77,7 +80,7 @@ module.exports = (name, ledgerDir, infoDir) => {
         info: (...args) => {
             const output = format(...args);
             console.log(output);
-            return writeToFile(infoDir, name, output);
+            return queueInfo.push(() => { return writeToFile(infoDir, name, output); });
         },
 
         // Write only to the console
