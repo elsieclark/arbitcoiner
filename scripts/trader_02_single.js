@@ -234,7 +234,8 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
     if (profits[soldCoin][boughtCoin][valueCoin] !== percentChanges.sum.toFixed(3)) {
         profits[soldCoin][boughtCoin][valueCoin] = percentChanges.sum.toFixed(3);
 
-        printUpdateMessage();
+        printUpdateMessage()
+            .catch(console.log)
 
         if (percentChanges.sum > 0) {
             printTradeMessage({
@@ -366,7 +367,6 @@ const tryTradeForCoin = async(soldCoin) => {
         checkProfitability(soldCoin, otherCoins[0], otherCoins[1], frozenStatus),
         checkProfitability(soldCoin, otherCoins[1], otherCoins[0], frozenStatus),
     ];
-    console.log(profitability)
 
     profitability.forEach((val, i) => {
         if (val > 0.2) {
