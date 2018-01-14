@@ -208,8 +208,7 @@ const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => 
 
 const printTradeMessage = ({ percentChanges, soldCoin, boughtCoin, valueCoin, initialValues, initialPortfolio,
                                finalValues, finalPortfolio, statusSnapshot, msg,  printType = 'info' }) => {
-    return Log[printType](`\n${msg}: ${timestamp()}`,
-        `\n\n   `, statusSnapshot, '\n');
+    return Log[printType]('Kappa');
 
 };
 
