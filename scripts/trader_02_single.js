@@ -196,7 +196,7 @@ const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => 
         `${formatPercent(percentChanges.boughtCoin)},`,
         `${formatPercent(percentChanges.valueCoin)},`,
         `Sum: ${formatPercent(percentChanges.sum)},`,
-        `Trades: ${tradeCount}`,
+        `Trades: ${tradeCount},`,
         `Balances:`,
         `{ BTC: ${status.BTC.balance.toFixed(8)},`,
         `ETH: ${status.ETH.balance.toFixed(8)},`,
