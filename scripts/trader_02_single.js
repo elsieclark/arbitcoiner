@@ -366,6 +366,7 @@ const tryTradeForCoin = async(soldCoin) => {
         checkProfitability(soldCoin, otherCoins[0], otherCoins[1], frozenStatus),
         checkProfitability(soldCoin, otherCoins[1], otherCoins[0], frozenStatus),
     ];
+    console.log(profitability)
 
     profitability.forEach((val, i) => {
         if (val > 0.2) {
