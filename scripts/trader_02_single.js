@@ -190,25 +190,22 @@ const formatPercent = (input) => {
 
 const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => {
     console.log('Delta')
-    Log.info(timestamp(),
-        `Sell: ${soldCoin}, Buy: ${boughtCoin}, Value: ${valueCoin}`,
-        `% gains:`,
-        `${formatPercent(percentChanges.soldCoin)},`,
-        `${formatPercent(percentChanges.boughtCoin)},`,
-        `${formatPercent(percentChanges.valueCoin)},`,
-        `Sum: ${formatPercent(percentChanges.sum)},`,
-        `Trades: ${tradeCount}`,
-        `Balances:`,
-        `{ BTC: ${status.BTC.balance.toFixed(8)},`,
-        `ETH: ${status.ETH.balance.toFixed(8)},`,
-        `BCH: ${status.BCH.balance.toFixed(8)} }`)
-        .then(() => {console.log('Epsilon')})
-        .catch((e) => {console.log('Zeta', e)});
+    Log.info('Kappa');
 };
 
 const printTradeMessage = ({ percentChanges, soldCoin, boughtCoin, valueCoin, initialValues, initialPortfolio,
                                finalValues, finalPortfolio, statusSnapshot, msg,  printType = 'info' }) => {
-    return Log[printType]('Kappa');
+    return Log[printType](`\n${msg}: ${timestamp()}`,
+        `\n    Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
+        `\n    Initial value: ${initialValues.valueCoin}`,
+        `\n    Initial portfolio: `, initialPortfolio,
+        `\n    Final value:   ${finalValues.valueCoin}`,
+        `\n    Final portfolio:   `, finalPortfolio,
+        `\n    Final % gain soldCoin   ${soldCoin}: ${formatPercent(percentChanges.soldCoin)}`,
+        `\n    Final % gain boughtCoin ${boughtCoin}: ${formatPercent(percentChanges.boughtCoin)}`,
+        `\n    Final % gain valueCoin  ${valueCoin}: ${formatPercent(percentChanges.valueCoin)}`,
+        `\n    Final % gain total         : ${formatPercent(percentChanges.sum)}`,
+        `\n\n   `, statusSnapshot, '\n');
 
 };
 
