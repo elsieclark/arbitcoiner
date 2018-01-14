@@ -377,7 +377,7 @@ const tryTradeForCoin = async(soldCoin) => {
             const boughtCoinFraction = status[otherCoins[i]].balance *
                 status[soldCoin][otherCoins[i]].highestBid / totalValue;
             if (soldCoinFraction > 0.6 && boughtCoinFraction < 0.2) {
-                const fractionToTrade = soldCoinFraction - boughtCoinFraction / 2;
+                const fractionToTrade = Math.min(soldCoinFraction - boughtCoinFraction / 2, 1/3);
                 return commitToTrade(soldCoin, otherCoins[1], frozenStatus, fractionToTrade);
             }
         }
