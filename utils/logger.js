@@ -76,7 +76,7 @@ module.exports = (name, ledgerDir, infoDir) => {
         // Write to console and the info record
         info: (...args) => {
             const output = format(...args);
-            console.log('Iota', output);
+            console.log(output);
             return writeToFile(infoDir, name, output);
         },
 

@@ -209,15 +209,6 @@ const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => 
 const printTradeMessage = ({ percentChanges, soldCoin, boughtCoin, valueCoin, initialValues, initialPortfolio,
                                finalValues, finalPortfolio, statusSnapshot, msg,  printType = 'info' }) => {
     return Log[printType](`\n${msg}: ${timestamp()}`,
-        `\n    Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
-        `\n    Initial value: ${initialValues.valueCoin}`,
-        `\n    Initial portfolio: `, initialPortfolio,
-        `\n    Final value:   ${finalValues.valueCoin}`,
-        `\n    Final portfolio:   `, finalPortfolio,
-        `\n    Final % gain soldCoin   ${soldCoin}: ${formatPercent(percentChanges.soldCoin)}`,
-        `\n    Final % gain boughtCoin ${boughtCoin}: ${formatPercent(percentChanges.boughtCoin)}`,
-        `\n    Final % gain valueCoin  ${valueCoin}: ${formatPercent(percentChanges.valueCoin)}`,
-        `\n    Final % gain total         : ${formatPercent(percentChanges.sum)}`,
         `\n\n   `, statusSnapshot, '\n');
 
 };
