@@ -201,7 +201,9 @@ const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => 
         `Balances:`,
         `{ BTC: ${status.BTC.balance.toFixed(8)},`,
         `ETH: ${status.ETH.balance.toFixed(8)},`,
-        `BCH: ${status.BCH.balance.toFixed(8)} }`);
+        `BCH: ${status.BCH.balance.toFixed(8)} }`)
+        .then(() => {console.log('Epsilon')})
+        .catch((e) => {console.log('Zeta', e)});
 };
 
 const printTradeMessage = ({ percentChanges, soldCoin, boughtCoin, valueCoin, initialValues, initialPortfolio,
