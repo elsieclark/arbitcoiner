@@ -374,7 +374,7 @@ const tryTradeForCoin = async(soldCoin) => {
     profitability.forEach((val, i) => {
         if (val > 0.2) {
             boughtCoin = otherCoins[i];
-            return commitToTrade(soldCoin, otherCoins[1], frozenStatus, 1);
+            return commitToTrade(soldCoin, otherCoins[i], frozenStatus, 1);
         } else if (val > 0.02) {
             const totalValue = appraisePortfolioIn(soldCoin);
             const soldCoinFraction = status[soldCoin].balance / totalValue;
@@ -382,7 +382,7 @@ const tryTradeForCoin = async(soldCoin) => {
                 status[soldCoin][otherCoins[i]].highestBid / totalValue;
             if (soldCoinFraction > 0.6 && boughtCoinFraction < 0.2) {
                 const fractionToTrade = Math.min(soldCoinFraction - boughtCoinFraction / 2, 1/3);
-                return commitToTrade(soldCoin, otherCoins[1], frozenStatus, fractionToTrade);
+                return commitToTrade(soldCoin, otherCoins[i], frozenStatus, fractionToTrade);
             }
         }
     });
