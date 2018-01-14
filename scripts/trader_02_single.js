@@ -230,17 +230,13 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
 
     const percentChanges = createPercentChangeList(initialValues, finalValues);
 
+    console.log('Alpha', soldCoin, boughtCoin, valueCoin)
+
     // A new value has been calculated
     if (profits[soldCoin][boughtCoin][valueCoin] !== percentChanges.sum.toFixed(3)) {
         profits[soldCoin][boughtCoin][valueCoin] = percentChanges.sum.toFixed(3);
 
         printUpdateMessage()
-            .then(() => {
-                console.log('alpha')
-            })
-            .catch((err) => {
-                console.log('beta', err)
-            });
 
         if (percentChanges.sum > 0) {
             printTradeMessage({
