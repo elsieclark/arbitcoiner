@@ -189,6 +189,7 @@ const formatPercent = (input) => {
 };
 
 const printUpdateMessage = (percentChanges, soldCoin, boughtCoin, valueCoin) => {
+    console.log('Delta')
     return Log.info(timestamp(),
         `Sell: ${soldCoin}, Buy: ${boughtCoin}, Value: ${valueCoin}`,
         `% gains:`,
@@ -230,15 +231,17 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
 
     const percentChanges = createPercentChangeList(initialValues, finalValues);
 
-    console.log('Alpha', soldCoin, boughtCoin, valueCoin, percentChanges.sum)
+    console.log('Alpha', soldCoin, boughtCoin, valueCoin)
 
     // A new value has been calculated
     if (profits[soldCoin][boughtCoin][valueCoin] !== percentChanges.sum.toFixed(3)) {
         profits[soldCoin][boughtCoin][valueCoin] = percentChanges.sum.toFixed(3);
 
-        console.log('Beta', soldCoin, boughtCoin, valueCoin, percentChanges.sum)
+        console.log('Beta', soldCoin, boughtCoin, valueCoin)
 
         printUpdateMessage()
+
+        console.log('Gamma', soldCoin, boughtCoin, valueCoin)
 
         if (percentChanges.sum > 0) {
             printTradeMessage({
