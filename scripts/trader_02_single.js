@@ -198,8 +198,7 @@ const checkProfitability = (soldCoin, boughtCoin, valueCoin, frozenStatus) => {
         Log.info(timestamp(), `Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}, `,
             `% gain: ${percentChanges.soldCoin.toFixed(3)}, ${percentChanges.boughtCoin.toFixed(3)}, ${percentChanges.valueCoin.toFixed(3)}, `,
             `Sum: ${percentChangeSum.toFixed(3)}, `,
-            `Ticker rate: ${tickerData.executions / ((Date.now() - tickerData.startTime) / 1000)}, `,
-            `Ticker calls: ${tickerData.executions}`);
+            `Trades: ${tradeCount}`);
         if (percentChangeSum > 0.2) {
             Log.info(`\n    Trade found! ${timestamp()}`,
                 `\n        Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
@@ -252,20 +251,20 @@ const makeTrade = async(soldCoin, boughtCoin, frozenStatus) => {
     const rate = frozenStatus[soldCoin][boughtCoin].lowestAsk;
     status[soldCoin].busy = true;
     const polo = privatePolo[soldCoin];
-    Log.ledger(`\nMaking trade.`,
-        `\n    Selling: ${soldCoin}, `,
-        `\n    Buying:  ${boughtCoin}, `,
-        `\n    Amount:  ${frozenStatus[soldCoin].balance}`,
-        `\n    Rate:    ${rate}`,
-        `\n    Projected final amount: ${frozenStatus[boughtCoin].balance + (0.9975 * frozenStatus[soldCoin].balance / rate)}`,
-        `\n\n   `, frozenStatus, '\n');
 
-    return await queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
-        Log.info(`Actually executing ${soldCoin} -> ${boughtCoin} trade`, polo, polo.sell, polo.sell(), 'end');
+    return queue.push({ flags: [`private_${soldCoin}`], priority: 11 }, () => {
+        Log.ledger(`\nMaking trade:`, timestamp(),
+            `\n    Selling: ${soldCoin}, `,
+            `\n    Buying:  ${boughtCoin}, `,
+            `\n    Amount:  ${frozenStatus[soldCoin].balance}`,
+            `\n    Rate:    ${rate}`,
+            `\n    Projected final amount: ${frozenStatus[boughtCoin].balance + (0.9975 * frozenStatus[soldCoin].balance / rate)}`,
+            `\n\n   `, frozenStatus);
+
         if (soldCoin === 'BTC' || (soldCoin === 'ETH' && boughtCoin !== 'BTC')) {
-            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, 0.999*frozenStatus[soldCoin].balance/rate, 0, 1, 0);
+            return polo.buy(`${soldCoin}_${boughtCoin}`, rate, 0.99999*frozenStatus[soldCoin].balance/rate, 0, 1, 0);
         } else {
-            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, 0.999*frozenStatus[soldCoin].balance, 0, 1, 0);
+            return polo.sell(`${boughtCoin}_${soldCoin}`, 1/rate, 0.99999*frozenStatus[soldCoin].balance, 0, 1, 0);
         }
     });
 };
@@ -293,8 +292,9 @@ const tryTradeForCoin = async(soldCoin) => {
 
     try {
         const tradeResult = await makeTrade(soldCoin, boughtCoin, frozenStatus);
-        await updateBalances();
         await Log.ledger(`\n${timestamp()}    Trade #${tradeCount} Executed:`, tradeResult);
+        await updateBalances();
+        await Log.ledger(`\n${timestamp()}    Balances Updated:`);
 
         const initialPortfolio = {};
         initialPortfolio[soldCoin] = frozenStatus[soldCoin].balance;
@@ -325,7 +325,7 @@ const tryTradeForCoin = async(soldCoin) => {
         };
         const percentChangeSum = percentChanges.soldCoin + percentChanges.boughtCoin + percentChanges.valueCoin;
 
-        await Log.ledger(`\nTrade completed! ${timestamp()}`,
+        await Log.ledger(`\nTrade completed: ${timestamp()}`,
             `\n    Sell: ${soldCoin},  Buy: ${boughtCoin},  Value: ${valueCoin}`,
             `\n    Initial value: ${initialValues.valueCoin}`,
             `\n    Initial portfolio: `, initialPortfolio,
@@ -335,7 +335,7 @@ const tryTradeForCoin = async(soldCoin) => {
             `\n    Final % gain boughtCoin ${boughtCoin}: ${percentChanges.boughtCoin.toFixed(3)}`,
             `\n    Final % gain valueCoin  ${valueCoin}: ${percentChanges.valueCoin.toFixed(3)}`,
             `\n    Final % gain total         : ${percentChangeSum.toFixed(3)}`,
-            `\n\n   `, status);
+            `\n\n   `, status, '\n\n');
 
         tradeCount++;
         if (tradeCount > 6) {
