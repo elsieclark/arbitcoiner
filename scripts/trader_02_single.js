@@ -27,6 +27,7 @@ const tickerData = {
     executions: 0,
 };
 
+let tradeCount = 0;
 
 const queue = new Queue({
     rate: 6,
@@ -298,8 +299,6 @@ const isEnoughToTrade = (soldCoin, boughtCoin, frozenStatus, fraction) => {
     return true
 };
 
-let tradeCount = 0;
-
 const commitToTrade = async (soldCoin, boughtCoin, frozenStatus, fraction = 1) => {
     const valueCoin = COINS.reduce((acc, val) => {
         return (val === soldCoin || val === boughtCoin) ? acc : val;
@@ -345,11 +344,6 @@ const commitToTrade = async (soldCoin, boughtCoin, frozenStatus, fraction = 1) =
         });
 
         tradeCount++;
-        if (tradeCount > 6) {
-            await Log.ledger(`\nExecuted trade #${tradeCount}. Quitting.`);
-            process.exit(1);
-        }
-
     } catch (err) {
         await Log.info('Order placement failed', err);
         if (err.code !== 'ESOCKETTIMEDOUT') {
